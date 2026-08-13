@@ -12,7 +12,7 @@ import CostLedgerView from '../views/CostLedgerView.vue'
 import CustomersView from '../views/CustomersView.vue'
 
 const routes = [
-  { path: '/', redirect: '/dashboard' },
+  { path: '/', redirect: '/login' },
   { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
   { path: '/dashboard', name: 'dashboard', component: DashboardView },
   { path: '/pos', name: 'pos', component: PosView },
@@ -22,7 +22,7 @@ const routes = [
   { path: '/cost-ledger', name: 'cost-ledger', component: CostLedgerView },
   { path: '/receipts', name: 'receipts', component: ReceiptsView },
   { path: '/suppliers', name: 'suppliers', component: SuppliersView },
-  { path: '/:pathMatch(.*)*', redirect: '/dashboard' }
+  { path: '/:pathMatch(.*)*', redirect: '/login' }
 ]
 
 const router = createRouter({
@@ -33,6 +33,8 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   if (!to.meta.public && !store.currentUser.isAuthenticated) {
     next('/login')
+  } else if (to.path === '/login' && store.currentUser.isAuthenticated) {
+    next('/dashboard')
   } else {
     next()
   }

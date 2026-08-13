@@ -3,10 +3,10 @@ import { supabase } from '../supabase.js'
 
 export const store = reactive({
   currentUser: {
-    name: 'Kiel Hedrix',
-    email: 'admin@kielbiel.com',
-    role: 'Admin User',
-    isAuthenticated: true
+    name: '',
+    email: '',
+    role: '',
+    isAuthenticated: false
   },
   sidebarCollapsed: false,
   darkMode: localStorage.getItem('theme') === 'dark',
