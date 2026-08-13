@@ -124,6 +124,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { store } from '../store/inventoryStore.js'
+import { supabase } from '../supabase.js'
 import { User, Lock, AlertCircle, X } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -145,36 +146,65 @@ onMounted(() => {
   }
 })
 
-function handleLogin() {
+async function handleLogin() {
   errorMessage.value = ''
   isLoading.value = true
 
-  setTimeout(() => {
-    const inputEmail = email.value.trim().toLowerCase()
-    const inputPass = password.value.trim()
+  const inputEmail = email.value.trim().toLowerCase()
+  const inputPass = password.value.trim()
 
-    // Validate admin & cashier credentials
+  let userObj = null
+
+  // 1. Check Supabase users table if connected
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .or(`username.eq.${inputEmail},email.eq.${inputEmail}`)
+        .eq('password', inputPass)
+
+      if (!error && data && data.length > 0) {
+        userObj = {
+          name: data[0].full_name || data[0].username,
+          email: data[0].email || inputEmail,
+          role: data[0].role === 'admin' ? 'Admin User' : 'Cashier User'
+        }
+      }
+    } catch (err) {
+      console.error('Supabase user auth error:', err)
+    }
+  }
+
+  // 2. Strict check for exclusive authorized Admin account
+  if (!userObj) {
     const isValAdmin = (inputEmail === 'admin@kielbiel.com' || inputEmail === 'admin') && inputPass === 'admin123'
-    const isValCashier = (inputEmail === 'cashier@kielbiel.com' || inputEmail === 'cashier') && inputPass === 'cashier123'
-    const isCustomValid = inputPass.length >= 4 && (inputEmail.includes('@') || inputEmail.length >= 3)
-
-    if (!isValAdmin && !isValCashier && !isCustomValid) {
-      errorMessage.value = 'Invalid username/email or password! Please check your credentials and try again.'
-      isLoading.value = false
-      return
+    if (isValAdmin) {
+      userObj = {
+        name: 'Kiel Hedrix',
+        email: 'admin@kielbiel.com',
+        role: 'Admin User'
+      }
     }
+  }
 
-    if (remember.value) {
-      localStorage.setItem('remembered_login_user', email.value)
-    } else {
-      localStorage.removeItem('remembered_login_user')
-    }
-
-    const role = (inputEmail.includes('cashier') || inputEmail === 'cashier') ? 'Cashier User' : 'Admin User'
-    store.login(email.value, role)
+  // 3. Reject any unauthorized credentials
+  if (!userObj) {
+    errorMessage.value = 'Access denied! Invalid username/email or password.'
     isLoading.value = false
-    router.push('/dashboard')
-  }, 400)
+    return
+  }
+
+  if (remember.value) {
+    localStorage.setItem('remembered_login_user', email.value)
+  } else {
+    localStorage.removeItem('remembered_login_user')
+  }
+
+  store.login(userObj.email, userObj.role)
+  store.currentUser.name = userObj.name
+  isLoading.value = false
+  router.push('/dashboard')
 }
 
 function handleResetPassword() {
