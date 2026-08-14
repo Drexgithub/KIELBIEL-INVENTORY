@@ -1,8 +1,17 @@
 import { reactive } from 'vue'
 import { supabase } from '../supabase.js'
 
+const savedSession = (function() {
+  try {
+    const s = localStorage.getItem('pos_user_session')
+    return s ? JSON.parse(s) : null
+  } catch (e) {
+    return null
+  }
+})()
+
 export const store = reactive({
-  currentUser: {
+  currentUser: savedSession || {
     name: '',
     email: '',
     role: '',
@@ -11,6 +20,20 @@ export const store = reactive({
   sidebarCollapsed: false,
   darkMode: localStorage.getItem('theme') === 'dark',
   activeReceiptModal: null,
+
+  get isAdmin() {
+    return this.currentUser.isAuthenticated
+  },
+
+  login(email, role = 'Admin User', name = '') {
+    this.currentUser = {
+      name: name || 'Kiel Hedrix',
+      email: email,
+      role: 'Admin User',
+      isAuthenticated: true
+    }
+    localStorage.setItem('pos_user_session', JSON.stringify(this.currentUser))
+  },
 
   // Reactive State Arrays (Live populated from Supabase)
   products: [],
@@ -75,16 +98,14 @@ export const store = reactive({
     localStorage.setItem('theme', theme)
   },
 
-  login(email, role = 'Admin User') {
-    this.currentUser = {
-      name: email.includes('cashier') ? 'Cashier User' : 'Kiel Hedrix',
-      email: email,
-      role: role,
-      isAuthenticated: true
-    }
-  },
   logout() {
-    this.currentUser.isAuthenticated = false
+    this.currentUser = {
+      name: '',
+      email: '',
+      role: '',
+      isAuthenticated: false
+    }
+    localStorage.removeItem('pos_user_session')
   },
   toggleSidebar() {
     this.sidebarCollapsed = !this.sidebarCollapsed

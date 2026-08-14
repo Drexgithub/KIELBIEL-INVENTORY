@@ -37,7 +37,7 @@
 
       <div class="nav-list">
         <div class="nav-label">Accounting & Ledger</div>
-        <router-link to="/cost-ledger" class="nav-link" title="Cost of Goods (COGS)">
+        <router-link v-if="store.isAdmin" to="/cost-ledger" class="nav-link" title="Cost of Goods (COGS)">
           <DollarSign class="nav-icon" />
           <span v-if="!store.sidebarCollapsed">Cost of Goods (COGS)</span>
         </router-link>
@@ -45,7 +45,7 @@
           <Receipt class="nav-icon" />
           <span v-if="!store.sidebarCollapsed">Receipts Ledger</span>
         </router-link>
-        <router-link to="/suppliers" class="nav-link" title="Suppliers">
+        <router-link v-if="store.isAdmin" to="/suppliers" class="nav-link" title="Suppliers">
           <Users class="nav-icon" />
           <span v-if="!store.sidebarCollapsed">Suppliers</span>
         </router-link>
@@ -55,9 +55,16 @@
     <!-- User Profile Avatar Pills at Bottom -->
     <div class="sidebar-footer">
       <div v-if="!store.sidebarCollapsed" class="user-pill" style="display: flex; align-items: center; gap: 8px; padding: 0.5rem; background: var(--input-bg); border-radius: 8px; margin-bottom: 0.5rem;">
-        <div class="avatar-badge" style="width: 28px; height: 28px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0;">K</div>
-        <div style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.8rem; font-weight: 600; color: var(--text-main);">
-          {{ store.currentUser.name }}
+        <div class="avatar-badge" style="width: 28px; height: 28px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0;">
+          {{ (store.currentUser.name || 'U').charAt(0).toUpperCase() }}
+        </div>
+        <div style="flex: 1; overflow: hidden;">
+          <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.8rem; font-weight: 600; color: var(--text-main);">
+            {{ store.currentUser.name || 'User' }}
+          </div>
+          <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">
+            {{ store.currentUser.role || 'Role' }}
+          </div>
         </div>
       </div>
       <button class="nav-link text-danger w-100" style="padding: 0.5rem; justify-content: center;" @click="handleLogout" title="Logout">

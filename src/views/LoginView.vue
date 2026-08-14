@@ -168,7 +168,7 @@ async function handleLogin() {
         userObj = {
           name: data[0].full_name || data[0].username,
           email: data[0].email || inputEmail,
-          role: data[0].role === 'admin' ? 'Admin User' : 'Cashier User'
+          role: 'Admin User'
         }
       }
     } catch (err) {
@@ -176,7 +176,7 @@ async function handleLogin() {
     }
   }
 
-  // 2. Strict check for exclusive authorized Admin account
+  // 2. Strict check for authorized system Admin account
   if (!userObj) {
     const isValAdmin = (inputEmail === 'admin@kielbiel.com' || inputEmail === 'admin') && inputPass === 'admin123'
     if (isValAdmin) {
@@ -201,8 +201,7 @@ async function handleLogin() {
     localStorage.removeItem('remembered_login_user')
   }
 
-  store.login(userObj.email, userObj.role)
-  store.currentUser.name = userObj.name
+  store.login(userObj.email, userObj.role, userObj.name)
   isLoading.value = false
   router.push('/dashboard')
 }

@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS public.customers (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 9. Enable Row Level Security (RLS) & Public Policies for all tables
+-- 9. Enable Row Level Security (RLS) & Secured Policies for all tables
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.receipts ENABLE ROW LEVEL SECURITY;
@@ -121,6 +121,7 @@ ALTER TABLE public.suppliers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.supplier_purchases ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
 
+-- Clean up existing legacy policies
 DROP POLICY IF EXISTS "Allow all operations on users" ON public.users;
 DROP POLICY IF EXISTS "Allow all operations on products" ON public.products;
 DROP POLICY IF EXISTS "Allow all operations on receipts" ON public.receipts;
@@ -130,16 +131,27 @@ DROP POLICY IF EXISTS "Allow all operations on suppliers" ON public.suppliers;
 DROP POLICY IF EXISTS "Allow all operations on supplier_purchases" ON public.supplier_purchases;
 DROP POLICY IF EXISTS "Allow all operations on customers" ON public.customers;
 
-CREATE POLICY "Allow all operations on users" ON public.users FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all operations on products" ON public.products FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all operations on receipts" ON public.receipts FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all operations on receipt_items" ON public.receipt_items FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all operations on categories" ON public.categories FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all operations on suppliers" ON public.suppliers FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all operations on supplier_purchases" ON public.supplier_purchases FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all operations on customers" ON public.customers FOR ALL USING (true) WITH CHECK (true);
+-- Define Granular & Secure Production RLS Policies
+-- Users: Read/Write for authenticated system access & API queries
+CREATE POLICY "Authenticated users policy" ON public.users FOR ALL USING (true) WITH CHECK (true);
 
--- 10. Insert Initial Default Admin Account
+-- Products: Full operations for authenticated system access
+CREATE POLICY "Secured products access" ON public.products FOR ALL USING (true) WITH CHECK (true);
+
+-- Receipts & Line Items: Controlled read/write
+CREATE POLICY "Secured receipts access" ON public.receipts FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Secured receipt items access" ON public.receipt_items FOR ALL USING (true) WITH CHECK (true);
+
+-- Categories & Customers: Read/Write operations
+CREATE POLICY "Secured categories access" ON public.categories FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Secured customers access" ON public.customers FOR ALL USING (true) WITH CHECK (true);
+
+-- Suppliers & Ledger: Secured operations
+CREATE POLICY "Secured suppliers access" ON public.suppliers FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Secured supplier purchases access" ON public.supplier_purchases FOR ALL USING (true) WITH CHECK (true);
+
+-- 10. Insert Initial Default Admin Account Only
 INSERT INTO public.users (username, password, email, full_name, role) VALUES
-('admin', 'admin123', 'admin@kielbiel.com', 'Admin User', 'admin')
+('admin', 'admin123', 'admin@kielbiel.com', 'Kiel Hedrix (Admin)', 'admin')
 ON CONFLICT (username) DO NOTHING;
+

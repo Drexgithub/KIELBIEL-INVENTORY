@@ -6,7 +6,7 @@
         <p class="page-description">Manage product catalog, monitor stock levels, and update prices.</p>
       </div>
       <div class="header-actions">
-        <button class="btn btn-mint" @click="openAddProductModal">
+        <button v-if="store.isAdmin" class="btn btn-mint" @click="openAddProductModal">
           <Plus /> Add New Product
         </button>
       </div>
@@ -39,11 +39,11 @@
               <th>SKU</th>
               <th>Product Name</th>
               <th>Category</th>
-              <th>Cost Price</th>
+              <th v-if="store.isAdmin">Cost Price</th>
               <th>Selling Price</th>
               <th>Quantity</th>
               <th>Status</th>
-              <th style="text-align: right;">Actions</th>
+              <th v-if="store.isAdmin" style="text-align: right;">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -53,7 +53,7 @@
               </td>
               <td><strong style="color: var(--text-main);">{{ p.name }}</strong></td>
               <td><span class="user-pill" style="display: inline-block; font-size: 0.75rem; padding: 2px 10px;">{{ p.category }}</span></td>
-              <td>₱{{ Number(p.cost).toFixed(2) }}</td>
+              <td v-if="store.isAdmin">₱{{ Number(p.cost).toFixed(2) }}</td>
               <td class="font-bold" style="color: var(--text-main);">₱{{ Number(p.price).toFixed(2) }}</td>
               <td>
                 <span :style="{ fontWeight: '700', color: p.quantity <= p.min_stock ? '#F87171' : '#34D399' }">
@@ -65,7 +65,7 @@
                   {{ p.status }}
                 </span>
               </td>
-              <td style="text-align: right;">
+              <td v-if="store.isAdmin" style="text-align: right;">
                 <button class="icon-btn" title="Edit Product" style="width: 32px; height: 32px; display: inline-flex;" @click="editProduct(p)">
                   <Edit3 style="width: 15px; height: 15px;" />
                 </button>

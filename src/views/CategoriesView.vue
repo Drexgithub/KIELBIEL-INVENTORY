@@ -6,7 +6,7 @@
         <p class="page-description">Organize products into brand & item categories. Click any category card to view its product inventory list.</p>
       </div>
       <div class="header-actions">
-        <button class="btn btn-mint" @click="showAddModal = true">
+        <button v-if="store.isAdmin" class="btn btn-mint" @click="showAddModal = true">
           <Plus /> Add New Category
         </button>
       </div>
@@ -27,6 +27,7 @@
             <Layers />
           </div>
           <button 
+            v-if="store.isAdmin"
             class="icon-btn text-danger" 
             title="Delete Category" 
             style="width: 32px; height: 32px;" 

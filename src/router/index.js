@@ -19,9 +19,9 @@ const routes = [
   { path: '/products', name: 'products', component: ProductsView },
   { path: '/categories', name: 'categories', component: CategoriesView },
   { path: '/customers', name: 'customers', component: CustomersView },
-  { path: '/cost-ledger', name: 'cost-ledger', component: CostLedgerView },
+  { path: '/cost-ledger', name: 'cost-ledger', component: CostLedgerView, meta: { roles: ['Admin User'] } },
   { path: '/receipts', name: 'receipts', component: ReceiptsView },
-  { path: '/suppliers', name: 'suppliers', component: SuppliersView },
+  { path: '/suppliers', name: 'suppliers', component: SuppliersView, meta: { roles: ['Admin User'] } },
   { path: '/:pathMatch(.*)*', redirect: '/login' }
 ]
 
@@ -34,6 +34,16 @@ router.beforeEach((to, from, next) => {
   if (!to.meta.public && !store.currentUser.isAuthenticated) {
     next('/login')
   } else if (to.path === '/login' && store.currentUser.isAuthenticated) {
+    next('/dashboard')
+  } else if (to.meta.roles && !to.meta.roles.includes(store.currentUser.role)) {
+    // Access Control: Block unauthorized role access to accounting/supplier views
+    store.notifications.unshift({
+      id: Date.now(),
+      title: 'Security Alert: Access Restricted',
+      desc: `Restricted route "${to.path}" requires ${to.meta.roles.join(', ')} permission.`,
+      time: 'Just now',
+      unread: true
+    })
     next('/dashboard')
   } else {
     next()
