@@ -1,17 +1,8 @@
 import { reactive } from 'vue'
 import { supabase } from '../supabase.js'
 
-const savedSession = (function() {
-  try {
-    const s = localStorage.getItem('pos_user_session')
-    return s ? JSON.parse(s) : null
-  } catch (e) {
-    return null
-  }
-})()
-
 export const store = reactive({
-  currentUser: savedSession || {
+  currentUser: {
     name: '',
     email: '',
     role: '',
