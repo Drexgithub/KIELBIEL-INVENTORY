@@ -150,8 +150,8 @@ CREATE POLICY "Secured customers access" ON public.customers FOR ALL USING (true
 CREATE POLICY "Secured suppliers access" ON public.suppliers FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Secured supplier purchases access" ON public.supplier_purchases FOR ALL USING (true) WITH CHECK (true);
 
--- 10. Insert Initial Default Admin Account Only
+-- 10. Insert / Update Initial Default Admin Account
 INSERT INTO public.users (username, password, email, full_name, role) VALUES
-('admin', 'admin123', 'admin@kielbiel.com', 'Kiel Hedrix (Admin)', 'admin')
-ON CONFLICT (username) DO NOTHING;
+('admin', 'KielBiel2026#Admin', 'admin@kielbiel.com', 'Kiel Hedrix (Admin)', 'admin')
+ON CONFLICT (username) DO UPDATE SET password = EXCLUDED.password;
 

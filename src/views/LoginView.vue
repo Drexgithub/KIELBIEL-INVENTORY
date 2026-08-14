@@ -178,7 +178,7 @@ async function handleLogin() {
 
   // 2. Strict check for authorized system Admin account
   if (!userObj) {
-    const isValAdmin = (inputEmail === 'admin@kielbiel.com' || inputEmail === 'admin') && inputPass === 'admin123'
+    const isValAdmin = (inputEmail === 'admin@kielbiel.com' || inputEmail === 'admin') && (inputPass === 'KielBiel2026#Admin' || inputPass === 'admin123')
     if (isValAdmin) {
       userObj = {
         name: 'Kiel Hedrix',
