@@ -25,7 +25,7 @@
         </div>
 
         <!-- Integrated Search Bar Input inside Order Items Card -->
-        <div style="position: relative;">
+        <div ref="searchWrapper" style="position: relative;">
           <div class="search-container" style="max-width: 100%;">
             <Search class="search-icon" />
             <input 
@@ -116,7 +116,7 @@
       <div class="card p-4" style="gap: 1.25rem; position: sticky; top: 84px;">
         <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main);">Checkout Summary</h3>
 
-        <div class="form-group" style="position: relative;">
+        <div ref="customerWrapper" class="form-group" style="position: relative;">
           <label>Customer Name</label>
           <div style="position: relative; display: flex; align-items: center;">
             <input 
@@ -267,17 +267,36 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { store } from '../store/inventoryStore.js'
 import { User, Search, ShoppingCart, Trash2, CheckCircle, AlertTriangle, XCircle, ChevronDown } from 'lucide-vue-next'
 
 const productSearch = ref('')
 const showSuggestions = ref(false)
+const searchWrapper = ref(null)
 const customerName = ref('Walk-in Customer')
 const showCustomerDropdown = ref(false)
+const customerWrapper = ref(null)
 const paymentMethod = ref('Cash')
 const discountPercent = ref(0)
 const cart = ref([])
+
+function handleClickOutside(event) {
+  if (searchWrapper.value && !searchWrapper.value.contains(event.target)) {
+    showSuggestions.value = false
+  }
+  if (customerWrapper.value && !customerWrapper.value.contains(event.target)) {
+    showCustomerDropdown.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 const filteredCustomerOptions = computed(() => {
   if (!customerName.value.trim()) return store.customers
