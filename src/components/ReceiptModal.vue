@@ -5,8 +5,8 @@
       <!-- Company Official Header -->
       <div class="receipt-header">
         <h1 class="company-title">KIEL BIEL CONSUMER GOODS TRADING</h1>
-        <p class="company-subtitle">123 Business Boulevard, Commercial District, Metro Manila</p>
-        <p class="company-subtitle">VAT REG TIN: 000-123-456-0000 | TEL: (02) 8123-4567 | EMAIL: sales@kielbiel.com</p>
+        <p class="company-subtitle">Brgy.42 Rawis, Legazpi City</p>
+        <p class="company-subtitle">Cp# 09985317204</p>
         <div class="official-invoice-tag">OFFICIAL RECEIPT / INVOICE</div>
       </div>
 
