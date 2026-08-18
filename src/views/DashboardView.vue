@@ -1,8 +1,8 @@
 <template>
   <div class="content">
     
-    <!-- Page Header -->
-    <div class="page-header" style="margin-bottom: 1.5rem;">
+    <!-- Page Header with Right-Side Calendar Month Navigator -->
+    <div class="page-header" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.25rem;">
       <div>
         <h1 class="page-title" style="font-size: 1.75rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px;">
           Dashboard Overview
@@ -11,70 +11,60 @@
           <strong>KIEL BIEL CONSUMER GOODS TRADING</strong> • Real-time sales, profit ledger, and inventory metrics
         </p>
       </div>
-      <div class="date-picker-pill" style="display: flex; align-items: center; gap: 8px; padding: 0.5rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; font-size: 0.85rem; font-weight: 600; color: var(--text-main); box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-        <Calendar style="width: 16px; height: 16px; color: var(--primary);" />
-        <span>Today: {{ currentDate }}</span>
-      </div>
-    </div>
 
-    <!-- Monthly Navigation Bar -->
-    <div class="card p-3" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.75rem; background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-      
-      <!-- Left: Active Month Display with Navigation Arrows -->
+      <!-- RIGHT SIDE: Calendar Month Picker & Stepper (Outside of card, placed on the right side) -->
       <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-        <div style="display: flex; align-items: center; gap: 4px; background: var(--input-bg); padding: 4px 6px; border-radius: 10px; border: 1px solid var(--border);">
+        
+        <!-- Calendar Control Pill Widget -->
+        <div class="calendar-nav-pill">
+          <!-- Previous Month Arrow Button -->
           <button 
-            class="icon-btn" 
-            style="width: 34px; height: 34px; border-radius: 8px;" 
+            type="button"
+            class="cal-arrow-btn" 
             title="Previous Month" 
             @click="prevMonth"
           >
-            <ChevronLeft style="width: 18px; height: 18px;" />
+            <ChevronLeft style="width: 17px; height: 17px;" />
           </button>
           
-          <div style="display: flex; align-items: center; gap: 8px; padding: 0 0.875rem; font-weight: 800; font-size: 1.05rem; color: var(--text-main); min-width: 180px; justify-content: center;">
+          <!-- Clickable Month & Year with Native Calendar Picker Trigger -->
+          <label class="cal-month-trigger" title="Click to select month from calendar">
             <Calendar style="width: 17px; height: 17px; color: var(--primary);" />
             <span>{{ selectedMonthName }}</span>
-          </div>
+            <input 
+              type="month" 
+              class="cal-native-input"
+              :value="monthInputValue" 
+              @change="onNativeMonthChange" 
+            />
+          </label>
 
+          <!-- Next Month Arrow Button -->
           <button 
-            class="icon-btn" 
-            style="width: 34px; height: 34px; border-radius: 8px;" 
+            type="button"
+            class="cal-arrow-btn" 
             title="Next Month" 
             @click="nextMonth"
           >
-            <ChevronRight style="width: 18px; height: 18px;" />
+            <ChevronRight style="width: 17px; height: 17px;" />
           </button>
         </div>
 
+        <!-- Jump to Active / Current Month Button -->
         <button 
           v-if="!isCurrentMonthSelected" 
-          class="btn btn-outline btn-sm" 
-          style="font-size: 0.78rem; font-weight: 700; border-radius: 8px; padding: 6px 14px;"
+          type="button"
+          class="btn btn-mint btn-sm" 
+          style="font-size: 0.78rem; font-weight: 700; border-radius: 999px; padding: 6px 14px; height: 38px;"
           @click="resetToCurrentMonth"
         >
           Jump to This Month
         </button>
-        <span v-else class="status-badge status-completed" style="font-size: 0.75rem; padding: 4px 10px; font-weight: 700;">
+        <span v-else class="status-badge status-completed" style="font-size: 0.78rem; padding: 6px 14px; font-weight: 700; border-radius: 999px;">
           Active Month
         </span>
-      </div>
 
-      <!-- Right: Quick Month Dropdown Select -->
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted);">Jump to Month:</span>
-        <select 
-          :value="`${selectedYear}-${selectedMonth}`" 
-          @change="onMonthSelectChange" 
-          class="form-select" 
-          style="padding: 6px 12px; font-size: 0.85rem; font-weight: 700; border-radius: 8px; width: auto; min-width: 170px;"
-        >
-          <option v-for="opt in monthOptions" :key="opt.value" :value="opt.value">
-            {{ opt.label }}
-          </option>
-        </select>
       </div>
-
     </div>
 
     <!-- 4 Key Performance Indicator (KPI) Cards for Selected Month -->
@@ -317,8 +307,6 @@ import Chart from 'chart.js/auto'
 const acceptedOrdersCanvas = ref(null)
 let chartInstance = null
 
-const currentDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-
 // Active Selected Month & Year
 const now = new Date()
 const selectedYear = ref(now.getFullYear())
@@ -378,12 +366,6 @@ function resetToCurrentMonth() {
   selectedMonth.value = current.getMonth()
 }
 
-function onMonthSelectChange(event) {
-  const [y, m] = event.target.value.split('-').map(Number)
-  selectedYear.value = y
-  selectedMonth.value = m
-}
-
 const selectedMonthName = computed(() => {
   return new Date(selectedYear.value, selectedMonth.value, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
 })
@@ -392,31 +374,21 @@ const selectedMonthShort = computed(() => {
   return new Date(selectedYear.value, selectedMonth.value, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 })
 
+const monthInputValue = computed(() => {
+  const m = String(selectedMonth.value + 1).padStart(2, '0')
+  return `${selectedYear.value}-${m}`
+})
+
+function onNativeMonthChange(event) {
+  if (!event.target.value) return
+  const [y, m] = event.target.value.split('-').map(Number)
+  selectedYear.value = y
+  selectedMonth.value = m - 1
+}
+
 const isCurrentMonthSelected = computed(() => {
   const current = new Date()
   return selectedYear.value === current.getFullYear() && selectedMonth.value === current.getMonth()
-})
-
-const monthOptions = computed(() => {
-  const options = []
-  const current = new Date()
-  const currentY = current.getFullYear()
-  const currentM = current.getMonth()
-
-  // Generate options from past 12 months to next 2 months
-  for (let i = -12; i <= 2; i++) {
-    const d = new Date(currentY, currentM + i, 1)
-    const y = d.getFullYear()
-    const m = d.getMonth()
-    const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-    options.push({
-      value: `${y}-${m}`,
-      label: label,
-      year: y,
-      month: m
-    })
-  }
-  return options
 })
 
 // Filtered Receipts for Selected Month
@@ -596,3 +568,65 @@ watch([selectedYear, selectedMonth, monthlyReceipts], () => {
   renderOrUpdateChart()
 })
 </script>
+
+<style scoped>
+.calendar-nav-pill {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.cal-arrow-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cal-arrow-btn:hover {
+  background: var(--input-bg);
+  color: var(--primary);
+  transform: scale(1.08);
+}
+
+.cal-month-trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+  user-select: none;
+}
+
+.cal-month-trigger:hover {
+  background: var(--input-bg);
+}
+
+.cal-native-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+</style>
