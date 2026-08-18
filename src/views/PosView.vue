@@ -4,7 +4,7 @@
     <div class="page-header">
       <div>
         <h1 class="page-title">Point of Sale</h1>
-        <p class="page-description">Process customer sales, scan barcodes, and print official receipts.</p>
+        <p class="page-description">Process customer sales, issue receipts, and manage orders.</p>
       </div>
       <div class="date-picker-pill">
         <User style="width: 14px; height: 14px;" />
@@ -31,10 +31,10 @@
             <input 
               type="text" 
               v-model="productSearch" 
-              placeholder="Scan barcode or type item name, SKU..." 
+              placeholder="Type item name, SKU, or category..." 
               @focus="showSuggestions = true"
               @input="showSuggestions = true"
-              @keyup.enter="handleBarcodeScanEnter"
+              @keyup.enter="handleSearchEnter"
             />
           </div>
 
@@ -65,10 +65,10 @@
             <thead>
               <tr>
                 <th>Item Description</th>
-                <th style="width: 100px;">Price</th>
-                <th style="width: 120px; text-align: center;">Qty</th>
+                <th style="width: 130px;">Price</th>
+                <th style="width: 95px; text-align: center;">Qty</th>
                 <th style="width: 110px; text-align: right;">Line Total</th>
-                <th style="width: 50px;"></th>
+                <th style="width: 45px;"></th>
               </tr>
             </thead>
             <tbody>
@@ -81,19 +81,32 @@
                     <AlertTriangle style="width: 12px; height: 12px;" /> Low Stock: {{ item.stock }} left
                   </span>
                 </td>
-                <td>₱{{ Number(item.price).toFixed(2) }}</td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 4px;">
+                    <span style="font-weight: 700; color: var(--text-muted); font-size: 0.85rem;">₱</span>
+                    <input 
+                      type="number" 
+                      v-model.number="item.price" 
+                      min="0" 
+                      step="any" 
+                      class="form-input" 
+                      style="width: 85px; padding: 4px 6px; font-weight: 700; color: var(--primary);"
+                      @input="validateCartPrice(item)"
+                    />
+                  </div>
+                </td>
                 <td style="text-align: center;">
                   <input 
                     type="number" 
                     v-model.number="item.quantity" 
                     min="1" 
                     class="form-input" 
-                    style="width: 70px; text-align: center; padding: 4px;"
+                    style="width: 65px; text-align: center; padding: 4px;"
                     @change="validateCartQuantity(item)"
                   />
                 </td>
                 <td style="text-align: right; font-weight: 700; color: var(--primary);">
-                  ₱{{ (item.price * item.quantity).toFixed(2) }}
+                  ₱{{ ((Number(item.price) || 0) * (Number(item.quantity) || 0)).toFixed(2) }}
                 </td>
                 <td style="text-align: center;">
                   <button class="icon-btn text-danger" style="width: 28px; height: 28px; display: inline-flex;" @click="removeItem(index)">
@@ -337,7 +350,7 @@ const filteredSuggestions = computed(() => {
   )
 })
 
-const subtotal = computed(() => cart.value.reduce((sum, item) => sum + (item.price * item.quantity), 0))
+const subtotal = computed(() => cart.value.reduce((sum, item) => sum + ((Number(item.price) || 0) * (Number(item.quantity) || 0)), 0))
 const discountAmount = computed(() => subtotal.value * ((discountPercent.value || 0) / 100))
 const grandTotal = computed(() => Math.max(0, subtotal.value - discountAmount.value))
 
@@ -391,7 +404,7 @@ function addItemToCart(prod) {
       id: prod.id,
       sku: prod.sku,
       name: prod.name,
-      price: prod.price,
+      price: Number(prod.price) || 0,
       quantity: 1,
       stock: currentStock,
       min_stock: threshold
@@ -400,6 +413,12 @@ function addItemToCart(prod) {
 
   productSearch.value = ''
   showSuggestions.value = false
+}
+
+function validateCartPrice(item) {
+  if (item.price === null || item.price === undefined || isNaN(item.price) || item.price < 0) {
+    item.price = 0
+  }
 }
 
 function validateCartQuantity(item) {
@@ -414,7 +433,7 @@ function removeItem(index) {
   cart.value.splice(index, 1)
 }
 
-function handleBarcodeScanEnter() {
+function handleSearchEnter() {
   if (!productSearch.value.trim()) return
   const q = productSearch.value.toLowerCase().trim()
   const matched = store.products.find(p => 
@@ -425,7 +444,7 @@ function handleBarcodeScanEnter() {
   if (matched) {
     addItemToCart(matched)
   } else {
-    alert(`❌ No product found matching SKU "${productSearch.value}"`)
+    alert(`❌ No product found matching "${productSearch.value}"`)
   }
 }
 
@@ -450,9 +469,9 @@ function processCheckout() {
     status: 'Completed',
     items: cart.value.map(item => ({
       item_desc: item.name,
-      quantity: item.quantity,
-      unit_price: item.price,
-      line_total: item.price * item.quantity
+      quantity: Number(item.quantity) || 1,
+      unit_price: Number(item.price) || 0,
+      line_total: (Number(item.price) || 0) * (Number(item.quantity) || 1)
     }))
   }
 
