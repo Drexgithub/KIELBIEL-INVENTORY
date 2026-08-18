@@ -21,7 +21,7 @@
         <!-- Header & Clear Cart -->
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main);">Order Items ({{ cart.length }})</h3>
-          <button v-if="cart.length" class="btn-link" style="font-size: 0.8rem; color: var(--red-600);" @click="cart = []">Clear Order</button>
+          <button v-if="cart.length" class="btn-link" style="font-size: 0.8rem; color: var(--red-600);" @click="resetPos">Clear Order</button>
         </div>
 
         <!-- Integrated Search Bar Input inside Order Items Card -->
@@ -138,28 +138,28 @@
               class="form-input" 
               placeholder="Search or select customer..." 
               @focus="showCustomerDropdown = true"
-              @input="showCustomerDropdown = true"
+              @input="isTypingCustomer = true; showCustomerDropdown = true"
               style="padding-right: 36px;"
             />
             <button 
               type="button"
-              @click="showCustomerDropdown = !showCustomerDropdown"
+              @click="isTypingCustomer = false; showCustomerDropdown = !showCustomerDropdown"
               style="position: absolute; right: 8px; background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px;"
             >
               <ChevronDown style="width: 16px; height: 16px;" :style="{ transform: showCustomerDropdown ? 'rotate(180deg)' : 'none', transition: '0.2s' }" />
             </button>
           </div>
 
-          <!-- Searchable Customer Suggestions Dropdown -->
+          <!-- Searchable & Scrollable Customer Suggestions Dropdown -->
           <div 
             v-if="showCustomerDropdown && filteredCustomerOptions.length" 
-            class="card" 
-            style="position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 1000; max-height: 220px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.3);"
+            class="card customer-dropdown-menu" 
+            style="position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 1000; max-height: 240px; overflow-y: auto; box-shadow: 0 12px 28px rgba(0,0,0,0.25); border: 1px solid var(--border);"
           >
             <div 
               v-for="c in filteredCustomerOptions" 
               :key="c.id" 
-              style="padding: 0.65rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center;"
+              class="customer-item"
               :style="{ background: customerName === c.name ? 'var(--primary-light)' : 'transparent' }"
               @click="selectCustomer(c)"
             >
@@ -172,16 +172,6 @@
               </span>
             </div>
           </div>
-        </div>
-
-        <div class="form-group">
-          <label>Payment Method</label>
-          <select v-model="paymentMethod" class="form-select">
-            <option value="Cash">Cash</option>
-            <option value="GCash">GCash</option>
-            <option value="Credit Card">Credit Card</option>
-            <option value="Bank Transfer">Bank Transfer</option>
-          </select>
         </div>
 
         <div class="form-group">
@@ -205,8 +195,7 @@
         </div>
 
         <button 
-          class="btn btn-mint w-100" 
-          style="height: 48px; font-size: 1rem; font-weight: 700; border-radius: var(--radius-md);" 
+          class="btn pos-checkout-btn w-100" 
           :disabled="!cart.length"
           @click="processCheckout"
         >
@@ -280,19 +269,35 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { store } from '../store/inventoryStore.js'
 import { User, Search, ShoppingCart, Trash2, CheckCircle, AlertTriangle, XCircle, ChevronDown } from 'lucide-vue-next'
 
-const productSearch = ref('')
+// Initialized from persistent store draft so navigating to other pages does not erase encoded items
+const productSearch = ref(store.posDraft?.productSearch || '')
 const showSuggestions = ref(false)
 const searchWrapper = ref(null)
-const customerName = ref('Walk-in Customer')
+const customerName = ref(store.posDraft?.customerName || 'Walk-in Customer')
 const showCustomerDropdown = ref(false)
+const isTypingCustomer = ref(false)
 const customerWrapper = ref(null)
 const paymentMethod = ref('Cash')
-const discountPercent = ref(0)
-const cart = ref([])
+const discountPercent = ref(Number(store.posDraft?.discountPercent) || 0)
+const cart = ref(Array.isArray(store.posDraft?.cart) ? JSON.parse(JSON.stringify(store.posDraft.cart)) : [])
+
+// Auto-save draft whenever user encodes items, changes price, updates customer or discount
+watch(
+  [cart, customerName, discountPercent, productSearch],
+  () => {
+    store.savePosDraft({
+      cart: cart.value,
+      customerName: customerName.value,
+      discountPercent: discountPercent.value,
+      productSearch: productSearch.value
+    })
+  },
+  { deep: true }
+)
 
 function handleClickOutside(event) {
   if (searchWrapper.value && !searchWrapper.value.contains(event.target)) {
@@ -300,6 +305,7 @@ function handleClickOutside(event) {
   }
   if (customerWrapper.value && !customerWrapper.value.contains(event.target)) {
     showCustomerDropdown.value = false
+    isTypingCustomer.value = false
   }
 }
 
@@ -312,17 +318,26 @@ onUnmounted(() => {
 })
 
 const filteredCustomerOptions = computed(() => {
-  if (!customerName.value.trim()) return store.customers
   const q = customerName.value.toLowerCase().trim()
-  return store.customers.filter(c => 
-    c.name.toLowerCase().includes(q) ||
-    (c.phone && c.phone.toLowerCase().includes(q)) ||
-    (c.category && c.category.toLowerCase().includes(q))
-  )
+  if (!q) return store.customers
+  
+  // If user is actively typing, filter strictly
+  if (isTypingCustomer.value) {
+    const matches = store.customers.filter(c => 
+      c.name.toLowerCase().includes(q) ||
+      (c.phone && c.phone.toLowerCase().includes(q)) ||
+      (c.category && c.category.toLowerCase().includes(q))
+    )
+    return matches.length ? matches : store.customers
+  }
+
+  // When opening dropdown normally, show all customers so user can scroll through
+  return store.customers
 })
 
 function selectCustomer(c) {
   customerName.value = c.name
+  isTypingCustomer.value = false
   showCustomerDropdown.value = false
 }
 
@@ -460,7 +475,7 @@ function processCheckout() {
     invoice_no: invoiceNo,
     customer_name: customerName.value.trim() || 'Walk-in Customer',
     cashier_name: store.currentUser.name,
-    payment_method: paymentMethod.value,
+    payment_method: paymentMethod.value || 'Cash',
     subtotal: subtotal.value,
     discount: discountAmount.value,
     tax: 0,
@@ -494,5 +509,75 @@ function resetPos() {
   discountPercent.value = 0
   paymentMethod.value = 'Cash'
   showCustomerDropdown.value = false
+  isTypingCustomer.value = false
+  store.clearPosDraft()
 }
 </script>
+
+<style scoped>
+.pos-checkout-btn {
+  height: 48px;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  background-color: var(--primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pos-checkout-btn:hover:not(:disabled) {
+  background-color: #047857 !important;
+  background-image: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.45);
+  transform: translateY(-2px);
+  color: #ffffff !important;
+}
+
+.pos-checkout-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.customer-item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.15s ease;
+}
+
+.customer-item:hover {
+  background-color: var(--primary-light) !important;
+}
+
+.customer-item:last-child {
+  border-bottom: none;
+}
+
+.customer-dropdown-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.customer-dropdown-menu::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+
+.customer-dropdown-menu::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.customer-dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+</style>

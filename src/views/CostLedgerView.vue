@@ -28,7 +28,7 @@
               <th>SKU</th>
               <th>Product Name</th>
               <th>Category</th>
-              <th>Unit Cost (Bought For)</th>
+              <th>Unit Cost (Capital)</th>
               <th>Selling Price</th>
               <th>Profit / Unit</th>
               <th>Margin (%)</th>
@@ -45,20 +45,34 @@
               <!-- Editable Unit Cost Field -->
               <td>
                 <div style="display: flex; align-items: center; gap: 4px;">
-                  <span style="color: var(--text-muted);">₱</span>
+                  <span style="color: var(--text-muted); font-weight: 600;">₱</span>
                   <input 
                     type="number" 
                     step="0.01" 
+                    min="0"
                     v-model.number="p.cost" 
                     class="form-input" 
                     style="width: 100px; padding: 4px 8px; height: 34px; font-weight: 700;"
-                    @change="updateCost(p)"
+                    @change="updateProductPricing(p)"
                   />
                 </div>
               </td>
 
-              <!-- Selling Price -->
-              <td><strong style="color: var(--text-main);">₱{{ Number(p.price).toFixed(2) }}</strong></td>
+              <!-- Editable Selling Price Field -->
+              <td>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span style="color: var(--text-muted); font-weight: 600;">₱</span>
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    min="0"
+                    v-model.number="p.price" 
+                    class="form-input" 
+                    style="width: 100px; padding: 4px 8px; height: 34px; font-weight: 700; color: var(--primary);"
+                    @change="updateProductPricing(p)"
+                  />
+                </div>
+              </td>
 
               <!-- Profit per unit -->
               <td class="font-bold" :style="{ color: (p.price - p.cost) >= 0 ? '#34D399' : '#F87171' }">
@@ -77,8 +91,8 @@
 
               <!-- Save Action Button -->
               <td style="text-align: right;">
-                <button class="btn btn-mint btn-sm" @click="updateCost(p)">
-                  <Save style="width: 14px; height: 14px;" /> Save Cost
+                <button class="btn btn-mint btn-sm" @click="updateProductPricing(p)">
+                  <Save style="width: 14px; height: 14px;" /> Save
                 </button>
               </td>
             </tr>
@@ -97,7 +111,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { store } from '../store/inventoryStore.js'
-import { DollarSign, TrendingUp, TrendingDown, Package, Search, Save } from 'lucide-vue-next'
+import { DollarSign, Search, Save } from 'lucide-vue-next'
 
 const search = ref('')
 
@@ -122,8 +136,10 @@ function getMarginPercent(p) {
   return ((p.price - p.cost) / p.price) * 100
 }
 
-function updateCost(p) {
+function updateProductPricing(p) {
+  if (p.cost === null || p.cost === undefined || isNaN(p.cost) || p.cost < 0) p.cost = 0
+  if (p.price === null || p.price === undefined || isNaN(p.price) || p.price < 0) p.price = 0
   store.updateProduct(p)
-  alert(`Cost price for "${p.name}" updated to ₱${Number(p.cost).toFixed(2)}!`)
+  alert(`Updated pricing for "${p.name}"!\nCost: ₱${Number(p.cost).toFixed(2)} | Selling Price: ₱${Number(p.price).toFixed(2)}`)
 }
 </script>

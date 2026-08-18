@@ -55,6 +55,54 @@ export const store = reactive({
     { id: 1, title: 'POS System Ready', desc: 'System connected to Supabase backend database.', time: 'Just now', unread: true }
   ],
 
+  // Persistent POS Draft Order State (retains encoded items across page changes)
+  posDraft: (() => {
+    try {
+      const saved = localStorage.getItem('pos_active_draft')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        return {
+          cart: Array.isArray(parsed.cart) ? parsed.cart : [],
+          customerName: parsed.customerName || 'Walk-in Customer',
+          discountPercent: Number(parsed.discountPercent) || 0,
+          productSearch: parsed.productSearch || ''
+        }
+      }
+    } catch (e) {
+      console.warn('Could not load pos_active_draft:', e)
+    }
+    return {
+      cart: [],
+      customerName: 'Walk-in Customer',
+      discountPercent: 0,
+      productSearch: ''
+    }
+  })(),
+
+  savePosDraft(draft) {
+    this.posDraft = {
+      cart: draft.cart || [],
+      customerName: draft.customerName || 'Walk-in Customer',
+      discountPercent: draft.discountPercent || 0,
+      productSearch: draft.productSearch || ''
+    }
+    try {
+      localStorage.setItem('pos_active_draft', JSON.stringify(this.posDraft))
+    } catch (e) {}
+  },
+
+  clearPosDraft() {
+    this.posDraft = {
+      cart: [],
+      customerName: 'Walk-in Customer',
+      discountPercent: 0,
+      productSearch: ''
+    }
+    try {
+      localStorage.removeItem('pos_active_draft')
+    } catch (e) {}
+  },
+
   get totalSales() {
     return this.receipts.reduce((acc, r) => acc + (r.status === 'Completed' ? Number(r.grand_total) : 0), 0)
   },

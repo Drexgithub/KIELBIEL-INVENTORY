@@ -1,10 +1,5 @@
 <template>
-  <header class="topbar">
-    <div class="search-container">
-      <Search class="search-icon" />
-      <input type="text" placeholder="Search products, receipts..." v-model="globalSearchQuery" @keyup.enter="handleGlobalSearch" />
-    </div>
-
+  <header class="topbar" style="justify-content: flex-end;">
     <div class="topbar-right">
       <!-- Cosy POS Date Pill Badge -->
       <div class="date-picker-pill">
@@ -50,20 +45,11 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { store } from '../store/inventoryStore.js'
-import { Search, PlusCircle, Bell, Calendar } from 'lucide-vue-next'
+import { PlusCircle, Bell, Calendar } from 'lucide-vue-next'
 
-const router = useRouter()
-const globalSearchQuery = ref('')
 const showNotifs = ref(false)
 
 const currentDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 const unreadCount = computed(() => store.notifications.filter(n => n.unread).length)
-
-function handleGlobalSearch() {
-  if (globalSearchQuery.value.trim()) {
-    router.push({ path: '/products', query: { search: globalSearchQuery.value.trim() } })
-  }
-}
 </script>
