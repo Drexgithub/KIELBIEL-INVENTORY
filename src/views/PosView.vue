@@ -481,7 +481,7 @@ function processCheckout() {
     tax: 0,
     grand_total: grandTotal.value,
     created_at: nowStr,
-    status: 'Completed',
+    status: 'Unpaid',
     items: cart.value.map(item => ({
       item_desc: item.name,
       quantity: Number(item.quantity) || 1,

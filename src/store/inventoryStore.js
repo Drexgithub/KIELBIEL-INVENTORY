@@ -385,7 +385,7 @@ export const store = reactive({
           discount: newReceipt.discount,
           tax: newReceipt.tax || 0,
           grand_total: newReceipt.grand_total,
-          status: newReceipt.status || 'Completed'
+          status: newReceipt.status || 'Unpaid'
         }])
 
         // 2. Insert Receipt Line Items
