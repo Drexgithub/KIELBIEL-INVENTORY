@@ -29,12 +29,12 @@ export const store = reactive({
   // Reactive State Arrays (Live populated from Supabase)
   products: [],
   receipts: [
-    { receipt_no: 'REC-2026-001', invoice_no: 'INV-1021', customer_name: 'Juan Dela Cruz', cashier_name: 'Admin User', payment_method: 'Cash', subtotal: 2500, discount: 0, tax: 0, grand_total: 2500, status: 'Completed', created_at: '2026-06-15 14:30:00', items: [] },
-    { receipt_no: 'REC-2026-002', invoice_no: 'INV-1022', customer_name: 'Juan Dela Cruz', cashier_name: 'Admin User', payment_method: 'GCash', subtotal: 10000, discount: 0, tax: 0, grand_total: 10000, status: 'Completed', created_at: '2026-07-20 11:15:00', items: [] },
-    { receipt_no: 'REC-2026-003', invoice_no: 'INV-1023', customer_name: 'Maria Santos', cashier_name: 'Admin User', payment_method: 'Credit Card', subtotal: 15400, discount: 400, tax: 0, grand_total: 15000, status: 'Completed', created_at: '2026-07-10 09:45:00', items: [] },
-    { receipt_no: 'REC-2026-004', invoice_no: 'INV-1024', customer_name: 'Maria Santos', cashier_name: 'Admin User', payment_method: 'GCash', subtotal: 13400, discount: 0, tax: 0, grand_total: 13400, status: 'Completed', created_at: '2026-08-02 16:20:00', items: [] },
-    { receipt_no: 'REC-2026-005', invoice_no: 'INV-1025', customer_name: 'ACME Supermarket', cashier_name: 'Admin User', payment_method: 'Bank Transfer', subtotal: 45000, discount: 0, tax: 0, grand_total: 45000, status: 'Completed', created_at: '2026-06-28 10:00:00', items: [] },
-    { receipt_no: 'REC-2026-006', invoice_no: 'INV-1026', customer_name: 'ACME Supermarket', cashier_name: 'Admin User', payment_method: 'Bank Transfer', subtotal: 50000, discount: 0, tax: 0, grand_total: 50000, status: 'Completed', created_at: '2026-08-05 13:10:00', items: [] }
+    { receipt_no: 'REC-2026-001', invoice_no: 'INV-1021', customer_name: 'Juan Dela Cruz', cashier_name: 'Admin User', payment_method: 'Cash', subtotal: 2500, discount: 0, tax: 0, grand_total: 2500, status: 'Unpaid', created_at: '2026-06-15 14:30:00', items: [] },
+    { receipt_no: 'REC-2026-002', invoice_no: 'INV-1022', customer_name: 'Juan Dela Cruz', cashier_name: 'Admin User', payment_method: 'GCash', subtotal: 10000, discount: 0, tax: 0, grand_total: 10000, status: 'Unpaid', created_at: '2026-07-20 11:15:00', items: [] },
+    { receipt_no: 'REC-2026-003', invoice_no: 'INV-1023', customer_name: 'Maria Santos', cashier_name: 'Admin User', payment_method: 'Credit Card', subtotal: 15400, discount: 400, tax: 0, grand_total: 15000, status: 'Unpaid', created_at: '2026-07-10 09:45:00', items: [] },
+    { receipt_no: 'REC-2026-004', invoice_no: 'INV-1024', customer_name: 'Maria Santos', cashier_name: 'Admin User', payment_method: 'GCash', subtotal: 13400, discount: 0, tax: 0, grand_total: 13400, status: 'Unpaid', created_at: '2026-08-02 16:20:00', items: [] },
+    { receipt_no: 'REC-2026-005', invoice_no: 'INV-1025', customer_name: 'ACME Supermarket', cashier_name: 'Admin User', payment_method: 'Bank Transfer', subtotal: 45000, discount: 0, tax: 0, grand_total: 45000, status: 'Unpaid', created_at: '2026-06-28 10:00:00', items: [] },
+    { receipt_no: 'REC-2026-006', invoice_no: 'INV-1026', customer_name: 'ACME Supermarket', cashier_name: 'Admin User', payment_method: 'Bank Transfer', subtotal: 50000, discount: 0, tax: 0, grand_total: 50000, status: 'Unpaid', created_at: '2026-08-05 13:10:00', items: [] }
   ],
   categories: [
     { id: 1, name: 'Electronics', description: 'Hardware, cables & devices' },
@@ -201,7 +201,7 @@ export const store = reactive({
             discount: Number(r.discount || 0),
             tax: Number(r.tax || 0),
             grand_total: Number(r.grand_total),
-            status: r.status || 'Completed',
+            status: r.status === 'Paid' ? 'Paid' : (r.status === 'Refunded' ? 'Refunded' : 'Unpaid'),
             created_at: r.created_at ? new Date(r.created_at).toLocaleString() : new Date().toLocaleString(),
             items: receiptItems.map(i => ({
               item_desc: i.item_desc,

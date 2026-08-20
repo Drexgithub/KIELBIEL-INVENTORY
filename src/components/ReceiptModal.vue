@@ -8,15 +8,6 @@
         <p class="company-subtitle">Brgy.42 Rawis, Legazpi City</p>
         <p class="company-subtitle">Cp# 09985317204</p>
         <div class="official-invoice-tag">OFFICIAL RECEIPT / INVOICE</div>
-        <div style="margin-top: 6px;">
-          <span 
-            class="status-badge" 
-            :class="isPaid ? 'status-completed' : (receipt.status === 'Refunded' ? 'status-cancelled' : 'status-pending')"
-            style="font-weight: 800; font-size: 0.78rem; padding: 3px 12px; text-transform: uppercase;"
-          >
-            ● {{ isPaid ? 'PAID' : (receipt.status || 'UNPAID') }}
-          </span>
-        </div>
       </div>
 
       <!-- Receipt Metadata Grid -->
@@ -31,7 +22,6 @@
           <div><span class="meta-label">Receipt No:</span> <strong class="meta-val text-primary">{{ receipt.receipt_no }}</strong></div>
           <div><span class="meta-label">Invoice Ref:</span> <span class="meta-val">{{ receipt.invoice_no }}</span></div>
           <div><span class="meta-label">Date & Time:</span> <span class="meta-val">{{ receipt.created_at }}</span></div>
-          <div><span class="meta-label">Payment Status:</span> <strong class="meta-val" :style="{ color: isPaid ? '#10B981' : '#F59E0B', fontWeight: 700 }">{{ isPaid ? 'PAID' : (receipt.status || 'UNPAID') }}</strong></div>
         </div>
       </div>
 
@@ -113,17 +103,7 @@
       </div>
 
       <!-- Action Buttons (Hidden on Print) -->
-      <div class="modal-footer no-print-controls" style="margin-top: 1.5rem; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-        <button 
-          class="btn" 
-          :class="isPaid ? 'btn-outline' : 'btn-mint'" 
-          @click="toggleReceiptPaid"
-          style="display: inline-flex; align-items: center; gap: 6px;"
-        >
-          <CheckCircle2 v-if="!isPaid" style="width: 16px; height: 16px;" />
-          <Clock v-else style="width: 16px; height: 16px;" />
-          {{ isPaid ? 'Mark as Unpaid' : 'Mark as Paid' }}
-        </button>
+      <div class="modal-footer no-print-controls" style="margin-top: 1.5rem; justify-content: center; gap: 1rem;">
         <button class="btn btn-outline" @click="store.closeReceipt">
           <X style="width: 16px; height: 16px;" /> Close
         </button>
@@ -139,19 +119,9 @@
 <script setup>
 import { computed } from 'vue'
 import { store } from '../store/inventoryStore.js'
-import { Printer, X, CheckCircle2, Clock } from 'lucide-vue-next'
+import { Printer, X } from 'lucide-vue-next'
 
 const receipt = computed(() => store.activeReceiptModal || {})
-
-const isPaid = computed(() => {
-  return receipt.value.status === 'Paid' || receipt.value.status === 'Completed'
-})
-
-function toggleReceiptPaid() {
-  if (!receipt.value.receipt_no) return
-  const newStatus = isPaid.value ? 'Unpaid' : 'Paid'
-  store.updateReceiptStatus(receipt.value.receipt_no, newStatus)
-}
 
 const customerAddress = computed(() => {
   if (receipt.value.customer_address) return receipt.value.customer_address

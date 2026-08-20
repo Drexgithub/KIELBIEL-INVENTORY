@@ -111,7 +111,7 @@ const filterDate = ref('')
 const statusFilter = ref('')
 
 function isPaid(r) {
-  return r.status === 'Paid' || r.status === 'Completed'
+  return r.status === 'Paid'
 }
 
 const filteredReceipts = computed(() => {

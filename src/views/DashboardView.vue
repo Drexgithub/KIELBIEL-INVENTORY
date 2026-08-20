@@ -264,8 +264,8 @@
                 {{ r.created_at }}
               </td>
               <td style="padding: 1rem 1.25rem;">
-                <span class="status-badge" :class="r.status === 'Completed' ? 'status-completed' : 'status-cancelled'">
-                  {{ r.status || 'Completed' }}
+                <span class="status-badge" :class="r.status === 'Paid' ? 'status-completed' : (r.status === 'Refunded' ? 'status-cancelled' : 'status-pending')">
+                  {{ r.status || 'Unpaid' }}
                 </span>
               </td>
               <td style="padding: 1rem 1.25rem; text-align: right;">
@@ -415,13 +415,13 @@ const prevMonthReceipts = computed(() => {
 
 // 1. Monthly Gross Revenue
 const monthlyGrossRevenue = computed(() => {
-  return monthlyReceipts.value.reduce((acc, r) => acc + (r.status === 'Completed' ? Number(r.grand_total || 0) : 0), 0)
+  return monthlyReceipts.value.reduce((acc, r) => acc + (r.status !== 'Refunded' ? Number(r.grand_total || 0) : 0), 0)
 })
 
 // 2. Monthly COGS
 const monthlyCogs = computed(() => {
   return monthlyReceipts.value.reduce((acc, r) => {
-    if (r.status !== 'Completed') return acc
+    if (r.status === 'Refunded') return acc
     if (!r.items || !r.items.length) {
       // Fallback estimate at 70% if receipt items are not attached in mock array
       return acc + (Number(r.grand_total || 0) * 0.7)
@@ -442,12 +442,12 @@ const monthlyNetProfit = computed(() => {
 
 // 4. Monthly Total Orders
 const monthlyTotalOrders = computed(() => {
-  return monthlyReceipts.value.filter(r => r.status === 'Completed').length
+  return monthlyReceipts.value.filter(r => r.status !== 'Refunded').length
 })
 
 // Revenue growth vs previous month
 const prevGrossRevenue = computed(() => {
-  return prevMonthReceipts.value.reduce((acc, r) => acc + (r.status === 'Completed' ? Number(r.grand_total || 0) : 0), 0)
+  return prevMonthReceipts.value.reduce((acc, r) => acc + (r.status !== 'Refunded' ? Number(r.grand_total || 0) : 0), 0)
 })
 
 const revenueGrowthPercent = computed(() => {
@@ -461,7 +461,7 @@ const topSellingProducts = computed(() => {
   const sourceReceipts = monthlyReceipts.value.length ? monthlyReceipts.value : store.receipts
 
   sourceReceipts.forEach(r => {
-    if (r.status === 'Completed' && r.items) {
+    if (r.status !== 'Refunded' && r.items) {
       r.items.forEach(item => {
         const name = item.item_desc
         if (!itemMap[name]) {
@@ -492,7 +492,7 @@ function renderOrUpdateChart() {
   // 4 weekly buckets for selected month: Days 1-7, 8-14, 15-21, 22+
   const weekData = [0, 0, 0, 0]
   monthlyReceipts.value.forEach(r => {
-    if (r.status === 'Completed') {
+    if (r.status !== 'Refunded') {
       const d = getReceiptDate(r)
       const day = d.getDate()
       if (day <= 7) weekData[0] += 1
