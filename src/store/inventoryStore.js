@@ -275,6 +275,23 @@ export const store = reactive({
     }
   },
 
+  getNextSku() {
+    let maxNum = 1000
+    if (this.products && this.products.length > 0) {
+      for (const p of this.products) {
+        if (!p.sku) continue
+        const match = String(p.sku).match(/SKU-(\d+)/i)
+        if (match) {
+          const num = parseInt(match[1], 10)
+          if (!isNaN(num) && num < 1000000 && num > maxNum) {
+            maxNum = num
+          }
+        }
+      }
+    }
+    return `SKU-${maxNum + 1}`
+  },
+
   // ====================================================================
   // LIVE SUPABASE MUTATION ACTIONS
   // ====================================================================
@@ -282,9 +299,10 @@ export const store = reactive({
     const qty = Number(product.quantity) || 0
     const minStock = Number(product.min_stock) || 10
     const status = qty === 0 ? 'Out of Stock' : (qty <= minStock ? 'Low Stock' : 'In Stock')
+    const finalSku = (product.sku && String(product.sku).trim()) ? String(product.sku).trim() : this.getNextSku()
 
     const newProd = {
-      sku: product.sku || ('SKU-' + Date.now().toString().slice(-6)),
+      sku: finalSku,
       name: product.name,
       category: product.category || 'General',
       quantity: qty,

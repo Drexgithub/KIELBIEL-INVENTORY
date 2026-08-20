@@ -194,7 +194,7 @@ function openAddProductModal() {
   isEditing.value = false
   form.value = {
     id: null,
-    sku: 'SKU-' + (1000 + store.products.length + 1),
+    sku: store.getNextSku(),
     name: '',
     category: store.categories[0]?.name || 'Electronics',
     quantity: 20,
