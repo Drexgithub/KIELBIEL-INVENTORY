@@ -104,11 +104,11 @@ export const store = reactive({
   },
 
   get totalSales() {
-    return this.receipts.reduce((acc, r) => acc + (r.status === 'Completed' ? Number(r.grand_total) : 0), 0)
+    return this.receipts.reduce((acc, r) => acc + (r.status === 'Completed' || r.status === 'Paid' ? Number(r.grand_total) : 0), 0)
   },
   get totalCogs() {
     return this.receipts.reduce((acc, r) => {
-      if (r.status !== 'Completed' || !r.items) return acc
+      if ((r.status !== 'Completed' && r.status !== 'Paid') || !r.items) return acc
       const receiptCogs = r.items.reduce((itemAcc, item) => {
         const prod = this.products.find(p => p.name.toLowerCase() === item.item_desc.toLowerCase())
         const unitCost = prod ? Number(prod.cost) : (Number(item.unit_price) * 0.7)
@@ -426,6 +426,20 @@ export const store = reactive({
           prod.status = prod.quantity === 0 ? 'Out of Stock' : (prod.quantity <= minStock ? 'Low Stock' : 'In Stock')
         }
       })
+    }
+  },
+
+  async updateReceiptStatus(receiptNo, status) {
+    if (supabase) {
+      try {
+        await supabase.from('receipts').update({ status }).eq('receipt_no', receiptNo)
+      } catch (err) {
+        console.error('Supabase updateReceiptStatus error:', err)
+      }
+    }
+    const rec = this.receipts.find(r => r.receipt_no === receiptNo)
+    if (rec) {
+      rec.status = status
     }
   },
 

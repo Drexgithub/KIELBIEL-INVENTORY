@@ -8,6 +8,15 @@
         <p class="company-subtitle">Brgy.42 Rawis, Legazpi City</p>
         <p class="company-subtitle">Cp# 09985317204</p>
         <div class="official-invoice-tag">OFFICIAL RECEIPT / INVOICE</div>
+        <div style="margin-top: 6px;">
+          <span 
+            class="status-badge" 
+            :class="(receipt.status === 'Paid' || receipt.status === 'Completed' || !receipt.status) ? 'status-completed' : (receipt.status === 'Refunded' ? 'status-cancelled' : 'status-pending')"
+            style="font-weight: 800; font-size: 0.78rem; padding: 3px 12px; text-transform: uppercase;"
+          >
+            ● {{ (receipt.status === 'Paid' || receipt.status === 'Completed' || !receipt.status) ? 'PAID' : receipt.status }}
+          </span>
+        </div>
       </div>
 
       <!-- Receipt Metadata Grid -->
@@ -22,6 +31,7 @@
           <div><span class="meta-label">Receipt No:</span> <strong class="meta-val text-primary">{{ receipt.receipt_no }}</strong></div>
           <div><span class="meta-label">Invoice Ref:</span> <span class="meta-val">{{ receipt.invoice_no }}</span></div>
           <div><span class="meta-label">Date & Time:</span> <span class="meta-val">{{ receipt.created_at }}</span></div>
+          <div><span class="meta-label">Payment Status:</span> <strong class="meta-val" :style="{ color: (receipt.status === 'Paid' || receipt.status === 'Completed' || !receipt.status) ? '#10B981' : '#F59E0B', fontWeight: 700 }">{{ (receipt.status === 'Paid' || receipt.status === 'Completed' || !receipt.status) ? 'PAID' : receipt.status }}</strong></div>
         </div>
       </div>
 
