@@ -41,7 +41,8 @@ export const store = reactive({
     { id: 2, name: 'Beverages', description: 'Softdrinks, coffee & juices' },
     { id: 3, name: 'Food', description: 'Canned goods & snacks' },
     { id: 4, name: 'Household', description: 'Detergents & cleaning' },
-    { id: 5, name: 'Furniture', description: 'Office desks & chairs' }
+    { id: 5, name: 'Furniture', description: 'Office desks & chairs' },
+    { id: 6, name: 'Rebisco', description: 'Biscuits, crackers, wafers & bakery snacks' }
   ],
   suppliers: [],
   customers: [
@@ -128,6 +129,135 @@ export const store = reactive({
   },
   get lowStockCount() {
     return this.products.filter(p => Number(p.quantity) <= Number(p.min_stock)).length
+  },
+
+  // Category & Supplier Dynamic Financial Engine
+  get categorySuppliers() {
+    const categoryMap = new Map()
+
+    // 1. Collect all known categories
+    this.categories.forEach(c => {
+      if (c && c.name && c.name.trim()) {
+        const name = c.name.trim()
+        categoryMap.set(name.toLowerCase(), { name: name, description: c.description || '' })
+      }
+    })
+
+    this.products.forEach(p => {
+      if (p && p.category && p.category.trim()) {
+        const name = p.category.trim()
+        const key = name.toLowerCase()
+        if (!categoryMap.has(key)) {
+          categoryMap.set(key, { name: name, description: `${name} product inventory` })
+        }
+      }
+    })
+
+    this.suppliers.forEach(s => {
+      if (s && s.category && s.category.trim()) {
+        const name = s.category.trim()
+        const key = name.toLowerCase()
+        if (!categoryMap.has(key)) {
+          categoryMap.set(key, { name: name, description: `${name} supplier line` })
+        }
+      }
+    })
+
+    // 2. Compute metrics for each category
+    const list = []
+    for (const [key, catObj] of categoryMap.entries()) {
+      const catName = catObj.name
+      const supMatch = this.suppliers.find(s => 
+        (s.category && s.category.toLowerCase().trim() === key) || 
+        (s.name && s.name.toLowerCase().trim() === key) ||
+        (s.code && s.code.toLowerCase().trim() === `sup-${key.slice(0, 4)}`)
+      )
+
+      // Products in this category
+      const prods = this.products.filter(p => (p.category || '').toLowerCase().trim() === key)
+
+      // Current in-stock quantity & remaining capital
+      const totalStock = prods.reduce((sum, p) => sum + (Number(p.quantity) || 0), 0)
+      const remainingPurchase = prods.reduce((sum, p) => sum + ((Number(p.quantity) || 0) * (Number(p.cost) || 0)), 0)
+
+      // Total sold units & COGS deduction from POS receipts
+      let totalSoldUnits = 0
+      let soldCost = 0
+
+      this.receipts.forEach(r => {
+        if (!r.items || !Array.isArray(r.items)) return
+        r.items.forEach(item => {
+          const prod = prods.find(p => p.name.toLowerCase().trim() === (item.item_desc || '').toLowerCase().trim())
+          if (prod) {
+            const qty = Number(item.quantity) || 0
+            const unitCost = Number(prod.cost) || 0
+            totalSoldUnits += qty
+            soldCost += qty * unitCost
+          }
+        })
+      })
+
+      // Purchase orders logged for this supplier/category
+      const supCode = supMatch ? supMatch.code : `SUP-${catName.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5) || 'CAT'}`
+      const catPurchases = this.purchases.filter(p => 
+        (p.supplierCode && p.supplierCode.toLowerCase() === (supMatch?.code || '').toLowerCase()) ||
+        (p.supplierCode && p.supplierCode.toLowerCase() === supCode.toLowerCase()) ||
+        (p.supplierCode && p.supplierCode.toLowerCase() === key)
+      )
+      const poTotal = catPurchases.reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
+
+      // Total cumulative cost = (remaining unsold stock cost + sold cost) + any standalone PO amounts
+      const stockTotal = remainingPurchase + soldCost
+      const totalPurchase = Math.max(stockTotal, (Number(supMatch?.totalPurchase) || 0), stockTotal + poTotal)
+
+      // Latest purchase / restock date
+      let lastDate = ''
+      if (catPurchases.length > 0) {
+        lastDate = catPurchases[0].date
+      } else if (supMatch?.lastPurchaseDate) {
+        lastDate = supMatch.lastPurchaseDate
+      }
+
+      let status = supMatch?.status || 'Active'
+      if (status === 'Active') {
+        if (prods.length === 0) status = 'No Products'
+        else if (totalStock === 0) status = 'Out of Stock'
+        else if (prods.some(p => Number(p.quantity) <= (Number(p.min_stock) || 10))) status = 'Low Stock'
+      }
+
+      list.push({
+        id: supMatch?.id || supCode,
+        code: supCode,
+        name: supMatch?.name || `${catName} Supplier`,
+        category: catName,
+        contact: supMatch?.contact || 'Account Representative',
+        email: supMatch?.email || `orders@${catName.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
+        phone: supMatch?.phone || '+63 917 888 1234',
+        address: supMatch?.address || 'Metro Manila, Philippines',
+        status: status,
+        products: prods,
+        productCount: prods.length,
+        totalStock: totalStock,
+        totalSoldUnits: totalSoldUnits,
+        soldCost: soldCost,
+        remainingPurchase: remainingPurchase,
+        totalPurchase: totalPurchase,
+        lastPurchaseDate: lastDate,
+        rawSupplier: supMatch || null
+      })
+    }
+
+    return list
+  },
+
+  get totalCategoryPurchases() {
+    return this.categorySuppliers.reduce((acc, c) => acc + Number(c.totalPurchase || 0), 0)
+  },
+  get totalCategoryRemaining() {
+    return this.categorySuppliers.reduce((acc, c) => acc + Number(c.remainingPurchase || 0), 0)
+  },
+  get totalCategorySoldDeductions() {
+    return this.categorySuppliers.reduce((acc, c) => acc + Number(c.soldCost || 0), 0)
   },
 
   toggleDarkMode() {
@@ -295,21 +425,144 @@ export const store = reactive({
   // ====================================================================
   // LIVE SUPABASE MUTATION ACTIONS
   // ====================================================================
+  async addStockToProduct(productIdOrSku, quantityToAdd, unitCost = null, poNumber = '', notes = '') {
+    const qty = Number(quantityToAdd) || 0
+    if (qty <= 0) return
+
+    const prod = this.products.find(p => p.id === productIdOrSku || p.sku === productIdOrSku)
+    if (!prod) return
+
+    const oldQty = Number(prod.quantity) || 0
+    const newQty = oldQty + qty
+    const costToUse = (unitCost !== null && unitCost !== undefined && !isNaN(unitCost) && unitCost >= 0) 
+      ? Number(unitCost) 
+      : (Number(prod.cost) || 0)
+
+    prod.quantity = newQty
+    prod.cost = costToUse
+    const minStock = Number(prod.min_stock) || 10
+    prod.status = newQty === 0 ? 'Out of Stock' : (newQty <= minStock ? 'Low Stock' : 'In Stock')
+
+    const categoryName = prod.category || 'General'
+    const supCode = `SUP-${categoryName.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5) || 'GEN'}`
+    const finalPoNumber = (poNumber && String(poNumber).trim()) ? String(poNumber).trim() : ('PO-' + Date.now().toString().slice(-6))
+    const today = new Date().toISOString().slice(0, 10)
+    const addedAmount = qty * costToUse
+
+    // 1. Add dated purchase entry to supplier purchases ledger
+    const purchaseEntry = {
+      id: 'PUR-' + Math.floor(1000 + Math.random() * 9000),
+      supplierCode: supCode,
+      poNumber: finalPoNumber,
+      date: today,
+      items: notes ? `${notes} (+${qty}x ${prod.name})` : `Restock +${qty}x ${prod.name} (${prod.sku})`,
+      amount: addedAmount,
+      method: 'Stock Replenishment',
+      status: 'Completed'
+    }
+    this.purchases.unshift(purchaseEntry)
+
+    // 2. Ensure supplier exists and update total
+    const sup = this.suppliers.find(s => (s.category || '').toLowerCase() === categoryName.toLowerCase() || s.code === supCode)
+    if (sup) {
+      sup.totalPurchase = (Number(sup.totalPurchase) || 0) + addedAmount
+      sup.totalOrders = (Number(sup.totalOrders) || 0) + 1
+      sup.lastPurchaseDate = today
+    } else {
+      this.suppliers.unshift({
+        id: supCode,
+        code: supCode,
+        name: `${categoryName} Supplier`,
+        contact: 'Sales Representative',
+        email: `orders@${categoryName.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
+        phone: '+63 917 888 1234',
+        category: categoryName,
+        totalPurchase: addedAmount,
+        totalOrders: 1,
+        status: 'Active',
+        address: 'Metro Manila, Philippines',
+        lastPurchaseDate: today
+      })
+    }
+
+    // 3. Supabase persistence
+    if (supabase) {
+      try {
+        if (prod.id) {
+          await supabase.from('products').update({
+            quantity: newQty,
+            cost: costToUse,
+            status: prod.status
+          }).eq('id', prod.id)
+        }
+        await supabase.from('supplier_purchases').insert([{
+          supplier_code: supCode,
+          po_number: purchaseEntry.poNumber,
+          purchase_date: purchaseEntry.date,
+          item_description: purchaseEntry.items,
+          amount: purchaseEntry.amount,
+          payment_method: purchaseEntry.method,
+          status: purchaseEntry.status
+        }])
+      } catch (err) {
+        console.error('Supabase addStockToProduct error:', err)
+      }
+    }
+
+    // 4. Notification
+    this.notifications.unshift({
+      id: Date.now(),
+      title: `📦 Stock Added: ${prod.name}`,
+      desc: `Added +${qty} units (${categoryName}). Added capital cost: ₱${addedAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}.`,
+      time: 'Just now',
+      unread: true
+    })
+  },
+
   async addProduct(product) {
     const qty = Number(product.quantity) || 0
     const minStock = Number(product.min_stock) || 10
     const status = qty === 0 ? 'Out of Stock' : (qty <= minStock ? 'Low Stock' : 'In Stock')
     const finalSku = (product.sku && String(product.sku).trim()) ? String(product.sku).trim() : this.getNextSku()
+    const catName = (product.category && String(product.category).trim()) ? String(product.category).trim() : 'General'
+
+    // Auto-register category if not existing
+    const catExists = this.categories.some(c => c.name.toLowerCase() === catName.toLowerCase())
+    if (!catExists) {
+      this.categories.push({ id: Date.now(), name: catName, description: `${catName} product line` })
+      if (supabase) {
+        try {
+          await supabase.from('categories').insert([{ name: catName, description: `${catName} product line` }])
+        } catch (e) {}
+      }
+    }
 
     const newProd = {
       sku: finalSku,
       name: product.name,
-      category: product.category || 'General',
+      category: catName,
       quantity: qty,
       cost: Number(product.cost) || 0,
       price: Number(product.price) || 0,
       min_stock: minStock,
       status: status
+    }
+
+    // If initial quantity > 0, also log initial stock purchase for supplier ledger
+    if (qty > 0) {
+      const supCode = `SUP-${catName.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5) || 'GEN'}`
+      const initialAmount = qty * (Number(product.cost) || 0)
+      const today = new Date().toISOString().slice(0, 10)
+      this.purchases.unshift({
+        id: 'PUR-' + Math.floor(1000 + Math.random() * 9000),
+        supplierCode: supCode,
+        poNumber: 'PO-' + Date.now().toString().slice(-6),
+        date: today,
+        items: `Initial Catalog Stock: ${qty}x ${product.name}`,
+        amount: initialAmount,
+        method: 'Inventory Setup',
+        status: 'Completed'
+      })
     }
 
     if (supabase) {
