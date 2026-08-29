@@ -21,7 +21,7 @@
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
           <select v-model="selectedCategory" class="form-select" style="width: 170px; height: 38px; padding: 0.25rem 0.75rem;">
             <option value="">All Categories</option>
-            <option v-for="cat in store.categories" :key="cat.id" :value="cat.name">{{ cat.name }}</option>
+            <option v-for="catName in allCategoriesList" :key="catName" :value="catName">{{ catName }}</option>
           </select>
           <select v-model="selectedStatus" class="form-select" style="width: 150px; height: 38px; padding: 0.25rem 0.75rem;">
             <option value="">All Statuses</option>
@@ -115,19 +115,42 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label>Category <span style="color: var(--red-600);">*</span></label>
-              <div style="display: flex; gap: 6px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                <label style="margin-bottom: 0;">Category <span style="color: var(--red-600);">*</span></label>
+                <button 
+                  type="button" 
+                  class="btn-link" 
+                  style="font-size: 0.78rem; font-weight: 700; color: var(--primary);"
+                  @click="toggleCustomCategory"
+                >
+                  {{ isCustomCategory ? '← Choose Existing' : '+ New Category' }}
+                </button>
+              </div>
+
+              <!-- Standard Dropdown Select -->
+              <select 
+                v-if="!isCustomCategory" 
+                v-model="form.category" 
+                class="form-select" 
+                @change="onCategorySelectChange"
+                required
+              >
+                <option value="" disabled>-- Select Product Category --</option>
+                <option v-for="catName in allCategoriesList" :key="catName" :value="catName">
+                  {{ catName }}
+                </option>
+                <option value="__NEW_CATEGORY__">+ Add New Category...</option>
+              </select>
+
+              <!-- Text Input for Custom Category -->
+              <div v-else style="display: flex; gap: 6px;">
                 <input 
                   type="text" 
                   v-model="form.category" 
                   class="form-input" 
-                  list="category-suggestions" 
-                  placeholder="e.g. Rebisco" 
+                  placeholder="Enter new category name (e.g. Snacks)..." 
                   required 
                 />
-                <datalist id="category-suggestions">
-                  <option v-for="cat in store.categories" :key="cat.id" :value="cat.name" />
-                </datalist>
               </div>
             </div>
             <div class="form-group">
@@ -234,6 +257,7 @@ const selectedStatus = ref('')
 
 const showModal = ref(false)
 const isEditing = ref(false)
+const isCustomCategory = ref(false)
 const form = ref({
   id: null,
   sku: '',
@@ -244,6 +268,28 @@ const form = ref({
   price: 35,
   min_stock: 10
 })
+
+const allCategoriesList = computed(() => {
+  return store.allCategoryNames || store.categories.map(c => c.name)
+})
+
+function toggleCustomCategory() {
+  isCustomCategory.value = !isCustomCategory.value
+  if (!isCustomCategory.value) {
+    if (!form.value.category || !allCategoriesList.value.includes(form.value.category)) {
+      form.value.category = allCategoriesList.value[0] || 'General'
+    }
+  } else {
+    form.value.category = ''
+  }
+}
+
+function onCategorySelectChange() {
+  if (form.value.category === '__NEW_CATEGORY__') {
+    isCustomCategory.value = true
+    form.value.category = ''
+  }
+}
 
 // Quick Restock State
 const showRestockModal = ref(false)
@@ -279,11 +325,13 @@ function getStatusBadgeClass(p) {
 
 function openAddProductModal() {
   isEditing.value = false
+  isCustomCategory.value = false
+  const defaultCat = allCategoriesList.value[0] || store.categories[0]?.name || 'Rebisco'
   form.value = {
     id: null,
     sku: store.getNextSku(),
     name: '',
-    category: store.categories[0]?.name || 'Rebisco',
+    category: defaultCat,
     quantity: 20,
     cost: 25,
     price: 35,
@@ -295,11 +343,24 @@ function openAddProductModal() {
 function editProduct(p) {
   isEditing.value = true
   form.value = { ...p }
+  if (p.category && !allCategoriesList.value.includes(p.category)) {
+    isCustomCategory.value = true
+  } else {
+    isCustomCategory.value = false
+  }
   showModal.value = true
 }
 
 async function saveProduct() {
-  if (!form.value.name) return
+  if (!form.value.name || !form.value.name.trim()) {
+    alert('Please enter a product name.')
+    return
+  }
+  if (!form.value.category || !form.value.category.trim()) {
+    alert('Please select or enter a product category.')
+    return
+  }
+  form.value.category = form.value.category.trim()
 
   if (isEditing.value) {
     await store.updateProduct(form.value)

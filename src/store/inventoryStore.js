@@ -260,6 +260,37 @@ export const store = reactive({
     return this.categorySuppliers.reduce((acc, c) => acc + Number(c.soldCost || 0), 0)
   },
 
+  get allCategoryNames() {
+    const catMap = new Map()
+    if (Array.isArray(this.categories)) {
+      this.categories.forEach(c => {
+        if (c && c.name && String(c.name).trim()) {
+          const name = String(c.name).trim()
+          catMap.set(name.toLowerCase(), name)
+        }
+      })
+    }
+    if (Array.isArray(this.products)) {
+      this.products.forEach(p => {
+        if (p && p.category && String(p.category).trim()) {
+          const name = String(p.category).trim()
+          catMap.set(name.toLowerCase(), name)
+        }
+      })
+    }
+    if (Array.isArray(this.suppliers)) {
+      this.suppliers.forEach(s => {
+        if (s && s.category && String(s.category).trim()) {
+          const name = String(s.category).trim()
+          catMap.set(name.toLowerCase(), name)
+        }
+      })
+    }
+    const list = Array.from(catMap.values())
+    list.sort((a, b) => a.localeCompare(b))
+    return list.length > 0 ? list : ['General']
+  },
+
   toggleDarkMode() {
     this.darkMode = !this.darkMode
     const theme = this.darkMode ? 'dark' : 'light'

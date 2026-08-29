@@ -26,9 +26,7 @@
           <div>
             <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Suppliers & Categories</div>
             <div style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); margin-top: 0.25rem;">{{ displayedSuppliers.length }}</div>
-            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">
-              {{ (startDate || endDate) ? 'Categories active in date range' : 'Active supplier lines' }}
-            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Active supplier lines</div>
           </div>
           <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(37, 99, 235, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center;">
             <Layers style="width: 22px; height: 22px;" />
@@ -44,7 +42,7 @@
               ₱{{ totalFilteredPurchases.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
             </div>
             <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">
-              {{ (startDate || endDate) ? 'Stock input in date range' : 'Cumulative stock capital' }}
+              {{ (startDate || endDate) ? 'Purchases in date range' : 'Cumulative stock capital' }}
             </div>
           </div>
           <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(37, 99, 235, 0.1); color: #2563EB; display: flex; align-items: center; justify-content: center;">
@@ -60,9 +58,7 @@
             <div style="font-size: 1.6rem; font-weight: 800; color: #059669; margin-top: 0.25rem;">
               ₱{{ totalFilteredRemaining.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
             </div>
-            <div style="font-size: 0.75rem; color: #059669; font-weight: 600; margin-top: 0.2rem;">
-              {{ (startDate || endDate) ? 'Remaining for filtered products' : 'Current in-stock valuation' }}
-            </div>
+            <div style="font-size: 0.75rem; color: #059669; font-weight: 600; margin-top: 0.2rem;">Current in-stock valuation</div>
           </div>
           <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); color: #059669; display: flex; align-items: center; justify-content: center;">
             <CheckCircle2 style="width: 22px; height: 22px;" />
@@ -107,7 +103,7 @@
               v-model="startDate" 
               class="form-input" 
               style="width: 145px; height: 36px; padding: 0.25rem 0.5rem; font-size: 0.8rem;" 
-              title="Filter stock input starting from date" 
+              title="Start Date" 
             />
           </div>
 
@@ -118,7 +114,7 @@
               v-model="endDate" 
               class="form-input" 
               style="width: 145px; height: 36px; padding: 0.25rem 0.5rem; font-size: 0.8rem;" 
-              title="Filter stock input up to date" 
+              title="End Date" 
             />
           </div>
 
@@ -174,9 +170,8 @@
       <div v-if="startDate || endDate" style="margin-top: 0.65rem; padding-top: 0.65rem; border-top: 1px dashed var(--border); font-size: 0.8rem; color: var(--primary); display: flex; align-items: center; justify-content: space-between;">
         <div style="display: flex; align-items: center; gap: 6px;">
           <Calendar style="width: 14px; height: 14px;" />
-          <span>Showing only products input/stocked between <strong>{{ startDate || 'Earliest' }}</strong> and <strong>{{ endDate || 'Latest' }}</strong></span>
+          <span>Filtered Date Range: <strong>{{ startDate || 'Earliest' }}</strong> to <strong>{{ endDate || 'Latest' }}</strong> (Showing Units Sold & Purchases in this period across all suppliers)</span>
         </div>
-        <span style="font-weight: 700;">{{ totalFilteredProductsCount }} {{ totalFilteredProductsCount === 1 ? 'product' : 'products' }} found</span>
       </div>
     </div>
 
@@ -205,11 +200,11 @@
                   </span>
                 </div>
                 <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
-                  {{ s.filteredProducts.length }} {{ s.filteredProducts.length === 1 ? 'product' : 'products' }} {{ (startDate || endDate) ? 'in date range' : 'registered' }}
+                  {{ s.products.length }} {{ s.products.length === 1 ? 'product' : 'products' }} registered
                 </div>
               </td>
 
-              <!-- In Stock Units for filtered products -->
+              <!-- In Stock Units (date-range sensitive) -->
               <td style="text-align: center;">
                 <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">
                   {{ s.filteredStock }}
@@ -217,15 +212,15 @@
                 <div style="font-size: 0.7rem; color: var(--text-muted);">units</div>
               </td>
 
-              <!-- Units Sold for filtered products in date range -->
+              <!-- Units Sold (date-range sensitive) -->
               <td style="text-align: center;">
-                <span style="font-weight: 700; font-size: 0.95rem; color: #D97706;">
+                <span style="font-weight: 700; font-size: 0.95rem;" :style="{ color: s.filteredSoldUnits > 0 ? '#D97706' : 'var(--text-muted)' }">
                   {{ s.filteredSoldUnits }}
                 </span>
                 <div style="font-size: 0.7rem; color: var(--text-muted);">sold</div>
               </td>
 
-              <!-- Total Purchase Column (Scoped to date range products) -->
+              <!-- Total Purchase Column (date-range sensitive) -->
               <td>
                 <div class="font-bold" style="color: #2563EB; font-size: 0.95rem;">
                   ₱{{ Number(s.filteredTotalPurchase).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
@@ -243,19 +238,32 @@
               </td>
 
               <!-- Actions -->
-              <td style="text-align: right;">
-                <div style="display: inline-flex; align-items: center; gap: 4px;">
-                  <button class="btn btn-outline btn-sm" title="View Products input in this Category" @click="openCategoryProductsModal(s)">
-                    <Package style="width: 14px; height: 14px;" /> View Products
+              <td style="text-align: right; vertical-align: middle;">
+                <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px;">
+                  <button 
+                    class="btn btn-outline btn-sm" 
+                    style="height: 34px; padding: 0 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; white-space: nowrap;" 
+                    title="View Products in this Category" 
+                    @click="openCategoryProductsModal(s)"
+                  >
+                    <Package style="width: 15px; height: 15px; flex-shrink: 0;" />
+                    <span>View Products</span>
                   </button>
-                  <button class="icon-btn" title="Log Dated Purchase Order" @click="openLogPurchaseModal(s)">
+                  <button 
+                    class="icon-btn" 
+                    style="width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;" 
+                    title="Log Dated Purchase Order" 
+                    @click="openLogPurchaseModal(s)"
+                  >
                     <FileText style="width: 15px; height: 15px; color: #64748B;" />
                   </button>
-                  <button class="icon-btn" title="View Purchase Order Ledger History" @click="openHistoryModal(s)">
+                  <button 
+                    class="icon-btn" 
+                    style="width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;" 
+                    title="View Purchase Order Ledger History" 
+                    @click="openHistoryModal(s)"
+                  >
                     <History style="width: 15px; height: 15px; color: #64748B;" />
-                  </button>
-                  <button v-if="s.rawSupplier" class="icon-btn text-danger" title="Delete Supplier Record" @click="deleteSup(s.code)">
-                    <Trash2 style="width: 15px; height: 15px;" />
                   </button>
                 </div>
               </td>
@@ -264,7 +272,7 @@
             <tr v-if="!displayedSuppliers.length">
               <td colspan="6" class="text-center" style="padding: 3.5rem 0; color: var(--text-muted);">
                 <Package style="width: 42px; height: 42px; opacity: 0.3; margin-bottom: 0.5rem;" />
-                <div>No products or stock input found for the selected date range.</div>
+                <div>No suppliers found matching the criteria.</div>
               </td>
             </tr>
           </tbody>
@@ -294,7 +302,7 @@
           <div class="form-group">
             <label>Product Category <span style="color: var(--red-600);">*</span></label>
             <select v-model="restockForm.category" class="form-select" @change="onRestockCategoryChange" required>
-              <option v-for="cat in store.categories" :key="cat.id" :value="cat.name">{{ cat.name }}</option>
+              <option v-for="catName in store.allCategoryNames" :key="catName" :value="catName">{{ catName }}</option>
             </select>
           </div>
 
@@ -408,7 +416,7 @@
             </h3>
             <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
               <template v-if="startDate || endDate">
-                Products input/stocked between <strong>{{ startDate || 'Earliest' }}</strong> and <strong>{{ endDate || 'Latest' }}</strong>
+                Showing units sold for products between <strong>{{ startDate || 'Earliest' }}</strong> and <strong>{{ endDate || 'Latest' }}</strong>
               </template>
               <template v-else>
                 All registered products under {{ activeCategorySupplier.category }}
@@ -422,15 +430,15 @@
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; background: var(--input-bg); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border);">
             <div>
               <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Total Purchase</span>
-              <strong style="font-size: 0.95rem; color: #2563EB;">₱{{ Number(activeCategorySupplier.filteredTotalPurchase).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</strong>
+              <strong style="font-size: 0.95rem; color: #2563EB;">₱{{ Number(activeCategorySupplier.filteredTotalPurchase || activeCategorySupplier.totalPurchase).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</strong>
             </div>
             <div>
               <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Remaining Purchase</span>
-              <strong style="font-size: 0.95rem; color: #059669;">₱{{ Number(activeCategorySupplier.filteredRemainingPurchase).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</strong>
+              <strong style="font-size: 0.95rem; color: #059669;">₱{{ Number(activeCategorySupplier.filteredRemainingPurchase || activeCategorySupplier.remainingPurchase).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</strong>
             </div>
             <div>
-              <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Filtered In-Stock</span>
-              <strong style="font-size: 0.95rem; color: var(--text-main);">{{ activeCategorySupplier.filteredStock }} units</strong>
+              <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">In-Stock Units</span>
+              <strong style="font-size: 0.95rem; color: var(--text-main);">{{ activeCategorySupplier.filteredStock !== undefined ? activeCategorySupplier.filteredStock : activeCategorySupplier.totalStock }} units</strong>
             </div>
           </div>
 
@@ -460,25 +468,20 @@
               <tbody>
                 <tr v-for="p in filteredActiveCategoryProducts" :key="p.sku || p.id">
                   <td><span style="font-family: monospace; font-weight: 700; color: var(--primary);">{{ p.sku }}</span></td>
-                  <td>
-                    <strong style="color: var(--text-main);">{{ p.name }}</strong>
-                    <div v-if="p.created_at" style="font-size: 0.7rem; color: var(--text-muted);">
-                      Input: {{ p.created_at }}
-                    </div>
-                  </td>
-                  <td style="text-align: center; font-weight: 700;">{{ p.quantity }}</td>
+                  <td><strong style="color: var(--text-main);">{{ p.name }}</strong></td>
+                  <td style="text-align: center; font-weight: 700;">{{ p.calculatedStock !== undefined ? p.calculatedStock : p.quantity }}</td>
                   <td>₱{{ Number(p.cost).toFixed(2) }}</td>
                   <td>₱{{ Number(p.price).toFixed(2) }}</td>
-                  <td style="text-align: center; color: #D97706; font-weight: 600;">
-                    {{ getProductUnitsSold(p.name) }}
+                  <td style="text-align: center; font-weight: 700;" :style="{ color: (p.calculatedSold || 0) > 0 ? '#D97706' : 'var(--text-muted)' }">
+                    {{ p.calculatedSold !== undefined ? p.calculatedSold : getProductUnitsSold(p.name) }}
                   </td>
                   <td class="font-bold" style="color: #059669;">
-                    ₱{{ (Number(p.quantity) * Number(p.cost)).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+                    ₱{{ Number(p.calculatedRemaining !== undefined ? p.calculatedRemaining : (p.quantity * p.cost)).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
                   </td>
                 </tr>
                 <tr v-if="!filteredActiveCategoryProducts.length">
                   <td colspan="7" class="text-center" style="padding: 2.5rem 0; color: var(--text-muted);">
-                    No products found matching the selected date range.
+                    No products registered in this category yet.
                   </td>
                 </tr>
               </tbody>
@@ -767,130 +770,170 @@ function clearFilters() {
   activeDatePreset.value = 'all'
 }
 
-// Helper: Check if a product was created, stocked, or restocked in the specified date range
-function isProductInDateRange(prod, sDateStr, eDateStr) {
-  if (!sDateStr && !eDateStr) return true
-
-  // 1. Check product's created_at date
-  if (prod.created_at) {
-    const pDate = prod.created_at.slice(0, 10)
-    if ((!sDateStr || pDate >= sDateStr) && (!eDateStr || pDate <= eDateStr)) {
-      return true
-    }
+// Robust helper: Extract 'YYYY-MM-DD' from any date representation
+function normalizeDateToYMD(raw) {
+  if (!raw) return ''
+  if (raw instanceof Date) {
+    if (isNaN(raw.getTime())) return ''
+    return raw.toISOString().slice(0, 10)
   }
+  const str = String(raw).trim()
+  // Pattern 1: YYYY-MM-DD
+  const ymdMatch = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/)
+  if (ymdMatch) {
+    const y = ymdMatch[1]
+    const m = String(ymdMatch[2]).padStart(2, '0')
+    const d = String(ymdMatch[3]).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+  // Pattern 2: M/D/YYYY or MM/DD/YYYY
+  const mdyMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/)
+  if (mdyMatch) {
+    const m = String(mdyMatch[1]).padStart(2, '0')
+    const d = String(mdyMatch[2]).padStart(2, '0')
+    const y = mdyMatch[3]
+    return `${y}-${m}-${d}`
+  }
+  // Pattern 3: Standard JS parse
+  try {
+    const parsed = new Date(str)
+    if (!isNaN(parsed.getTime())) {
+      const y = parsed.getFullYear()
+      const m = String(parsed.getMonth() + 1).padStart(2, '0')
+      const d = String(parsed.getDate()).padStart(2, '0')
+      return `${y}-${m}-${d}`
+    }
+  } catch (e) {}
 
-  // 2. Check purchase / restock ledger for this specific product SKU / name
+  return ''
+}
+
+// Check if date falls in [startDate, endDate]
+function isInDateRange(dateVal, startStr, endStr) {
+  if (!startStr && !endStr) return true
+  const ymd = normalizeDateToYMD(dateVal)
+  if (!ymd) return false
+  if (startStr && ymd < startStr) return false
+  if (endStr && ymd > endStr) return false
+  return true
+}
+
+// Helper: Extract added quantity for a product from a purchase record
+function getRestockQtyForProduct(purchase, prod) {
+  if (!purchase) return 0
   const prodSku = (prod.sku || '').toLowerCase().trim()
   const prodName = (prod.name || '').toLowerCase().trim()
 
-  const hasMatchingPurchase = store.purchases.some(p => {
-    if (!p.date) return false
-    const inRange = (!sDateStr || p.date >= sDateStr) && (!eDateStr || p.date <= eDateStr)
-    if (!inRange) return false
+  const matchSku = purchase.productSku && purchase.productSku.toLowerCase().trim() === prodSku
+  const matchName = purchase.productName && purchase.productName.toLowerCase().trim() === prodName
+  const matchItems = purchase.items && (
+    (prodSku && purchase.items.toLowerCase().includes(prodSku)) ||
+    (prodName && purchase.items.toLowerCase().includes(prodName))
+  )
 
-    const matchesSku = p.productSku && p.productSku.toLowerCase().trim() === prodSku
-    const matchesName = p.productName && p.productName.toLowerCase().trim() === prodName
-    const matchesItems = p.items && (
-      (prodSku && p.items.toLowerCase().includes(prodSku)) || 
-      (prodName && p.items.toLowerCase().includes(prodName))
-    )
-
-    return matchesSku || matchesName || matchesItems
-  })
-
-  return hasMatchingPurchase
+  if (matchSku || matchName || matchItems) {
+    if (purchase.quantity) return Number(purchase.quantity) || 0
+    if (purchase.items) {
+      const m = String(purchase.items).match(/\+(\d+)\s*(?:x|units)?/i)
+      if (m) return Number(m[1]) || 0
+    }
+    if (purchase.amount && prod.cost && Number(prod.cost) > 0) {
+      return Math.round(Number(purchase.amount) / Number(prod.cost))
+    }
+  }
+  return 0
 }
 
-// Compute Date-Filtered supplier metrics
+// Compute Date-Filtered supplier metrics across ALL suppliers
 const displayedSuppliers = computed(() => {
   const q = search.value.toLowerCase().trim()
   const isDateFiltered = !!(startDate.value || endDate.value)
+  const startStr = startDate.value || ''
+  const endStr = endDate.value || ''
 
-  const list = []
+  return store.categorySuppliers.map(s => {
+    let catStock = 0
+    let catSoldUnits = 0
+    let catRemainingPurchase = 0
+    let catSoldCost = 0
 
-  store.categorySuppliers.forEach(s => {
-    // Determine which products of this category were input in the date range
-    const matchingProducts = isDateFiltered
-      ? s.products.filter(p => isProductInDateRange(p, startDate.value, endDate.value))
-      : s.products
+    const categoryProductsWithMetrics = (s.products || []).map(p => {
+      const currentQty = Number(p.quantity) || 0
+      const unitCost = Number(p.cost) || 0
+      const pName = (p.name || '').toLowerCase().trim()
 
-    // Determine purchases logged in this date range
-    const supCode = (s.code || '').toLowerCase()
-    const catName = (s.category || '').toLowerCase()
+      let salesAfterEnd = 0
+      let salesInRange = 0
+      let restocksAfterEnd = 0
 
-    const matchingPurchases = store.purchases.filter(p => {
-      const pCode = (p.supplierCode || '').toLowerCase()
-      const matchesSupplier = pCode === supCode || pCode === catName
-      if (!matchesSupplier) return false
+      // 1. Calculate sales from customer receipts
+      store.receipts.forEach(r => {
+        if (!r.items || !Array.isArray(r.items)) return
+        const rYMD = normalizeDateToYMD(r.created_at)
+        if (!rYMD) return
 
-      if (isDateFiltered && p.date) {
-        if (startDate.value && p.date < startDate.value) return false
-        if (endDate.value && p.date > endDate.value) return false
-      }
-      return true
-    })
-
-    // If date filter is active, skip supplier if 0 products and 0 purchases match the date range
-    if (isDateFiltered && matchingProducts.length === 0 && matchingPurchases.length === 0) {
-      return
-    }
-
-    // Search query match
-    if (q) {
-      const matchesCat = s.category.toLowerCase().includes(q)
-      const matchesCode = s.code.toLowerCase().includes(q)
-      const matchesProd = matchingProducts.some(p => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))
-      if (!matchesCat && !matchesCode && !matchesProd) {
-        return
-      }
-    }
-
-    // Stock units of matching products
-    const filteredStock = matchingProducts.reduce((sum, p) => sum + (Number(p.quantity) || 0), 0)
-    const filteredRemainingPurchase = matchingProducts.reduce((sum, p) => sum + ((Number(p.quantity) || 0) * (Number(p.cost) || 0)), 0)
-
-    // Calculate sold units for matching products (date-range scoped)
-    let filteredSoldUnits = 0
-    let filteredSoldCost = 0
-
-    store.receipts.forEach(r => {
-      if (!r.items || !Array.isArray(r.items)) return
-
-      if (isDateFiltered && r.created_at) {
-        const rDate = typeof r.created_at === 'string' ? r.created_at.slice(0, 10) : new Date(r.created_at).toISOString().slice(0, 10)
-        if (startDate.value && rDate < startDate.value) return
-        if (endDate.value && rDate > endDate.value) return
-      }
-
-      r.items.forEach(item => {
-        const pMatch = matchingProducts.find(p => p.name.toLowerCase().trim() === (item.item_desc || '').toLowerCase().trim())
-        if (pMatch) {
-          const qty = Number(item.quantity) || 0
-          const unitCost = Number(pMatch.cost) || 0
-          filteredSoldUnits += qty
-          filteredSoldCost += qty * unitCost
-        }
+        r.items.forEach(item => {
+          if ((item.item_desc || '').toLowerCase().trim() === pName) {
+            const qty = Number(item.quantity) || 0
+            if (isDateFiltered && endStr && rYMD > endStr) {
+              salesAfterEnd += qty
+            } else if (isInDateRange(rYMD, startStr, endStr)) {
+              salesInRange += qty
+            }
+          }
+        })
       })
+
+      // 2. Calculate restocks after end date if filtered
+      if (isDateFiltered && endStr) {
+        store.purchases.forEach(pur => {
+          const pYMD = normalizeDateToYMD(pur.date)
+          if (pYMD && pYMD > endStr) {
+            restocksAfterEnd += getRestockQtyForProduct(pur, p)
+          }
+        })
+      }
+
+      // In-stock remaining at the end of selected date range
+      const calculatedStock = isDateFiltered
+        ? Math.max(0, currentQty + salesAfterEnd - restocksAfterEnd)
+        : currentQty
+
+      const calculatedSold = isDateFiltered ? salesInRange : salesInRange // or total receipts if all-time
+      const calculatedRemaining = calculatedStock * unitCost
+      const calculatedSoldCost = calculatedSold * unitCost
+
+      catStock += calculatedStock
+      catSoldUnits += calculatedSold
+      catRemainingPurchase += calculatedRemaining
+      catSoldCost += calculatedSoldCost
+
+      return {
+        ...p,
+        calculatedStock: calculatedStock,
+        calculatedSold: calculatedSold,
+        calculatedRemaining: calculatedRemaining
+      }
     })
 
-    const poAmount = matchingPurchases.reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
-    const stockTotal = filteredRemainingPurchase + filteredSoldCost
-    const filteredTotalPurchase = isDateFiltered
-      ? Math.max(stockTotal, poAmount)
+    const calculatedTotalPurchase = isDateFiltered
+      ? (catRemainingPurchase + catSoldCost)
       : s.totalPurchase
 
-    list.push({
+    return {
       ...s,
-      filteredProducts: matchingProducts,
-      filteredStock: filteredStock,
-      filteredSoldUnits: filteredSoldUnits,
-      filteredTotalPurchase: filteredTotalPurchase,
-      filteredRemainingPurchase: filteredRemainingPurchase,
-      filteredPurchases: matchingPurchases
-    })
+      productsWithMetrics: categoryProductsWithMetrics,
+      filteredStock: catStock,
+      filteredSoldUnits: catSoldUnits,
+      filteredTotalPurchase: calculatedTotalPurchase,
+      filteredRemainingPurchase: isDateFiltered ? catRemainingPurchase : s.remainingPurchase
+    }
+  }).filter(s => {
+    if (!q) return true
+    return s.category.toLowerCase().includes(q) || 
+      s.code.toLowerCase().includes(q) || 
+      s.products.some(p => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))
   })
-
-  return list
 })
 
 const totalFilteredPurchases = computed(() => {
@@ -903,10 +946,6 @@ const totalFilteredRemaining = computed(() => {
 
 const totalFilteredSoldUnits = computed(() => {
   return displayedSuppliers.value.reduce((sum, s) => sum + Number(s.filteredSoldUnits || 0), 0)
-})
-
-const totalFilteredProductsCount = computed(() => {
-  return displayedSuppliers.value.reduce((sum, s) => sum + s.filteredProducts.length, 0)
 })
 
 const activeSupplierPurchases = computed(() => {
@@ -936,21 +975,24 @@ const selectedProductCurrentStock = computed(() => {
 
 const filteredActiveCategoryProducts = computed(() => {
   if (!activeCategorySupplier.value) return []
-  const prods = activeCategorySupplier.value.filteredProducts || []
+  const supFound = displayedSuppliers.value.find(s => s.code === activeCategorySupplier.value.code)
+  const prods = supFound?.productsWithMetrics || activeCategorySupplier.value.products || []
   const q = categoryProductSearch.value.trim().toLowerCase()
   if (!q) return prods
   return prods.filter(p => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))
 })
 
+// Calculate units sold for a specific product in the selected date range
 function getProductUnitsSold(productName) {
   let sold = 0
-  const qName = productName.toLowerCase().trim()
+  const qName = (productName || '').toLowerCase().trim()
+  const startStr = startDate.value || ''
+  const endStr = endDate.value || ''
+
   store.receipts.forEach(r => {
-    if (!r.items) return
+    if (!r.items || !Array.isArray(r.items)) return
     if (startDate.value || endDate.value) {
-      const rDate = typeof r.created_at === 'string' ? r.created_at.slice(0, 10) : new Date(r.created_at).toISOString().slice(0, 10)
-      if (startDate.value && rDate < startDate.value) return
-      if (endDate.value && rDate > endDate.value) return
+      if (!isInDateRange(r.created_at, startStr, endStr)) return
     }
     r.items.forEach(item => {
       if ((item.item_desc || '').toLowerCase().trim() === qName) {
@@ -962,7 +1004,8 @@ function getProductUnitsSold(productName) {
 }
 
 function openQuickRestockModal(categoryItem) {
-  const cat = categoryItem ? categoryItem.category : (store.categories[0]?.name || 'Rebisco')
+  const defaultCat = (store.allCategoryNames && store.allCategoryNames[0]) || store.categories[0]?.name || 'Rebisco'
+  const cat = categoryItem ? categoryItem.category : defaultCat
   restockForm.value.category = cat
   restockForm.value.isNewProduct = false
   restockForm.value.quantityToAdd = 20
@@ -1126,7 +1169,7 @@ function deleteSup(code) {
 function exportSuppliersCSV() {
   let csv = 'Supplier Name,Supplier Code,Products Count,In-Stock Units,Sold Units,Total Purchase,Remaining Purchase,Last Purchase Date\n'
   displayedSuppliers.value.forEach(s => {
-    csv += `"${s.category}","${s.code}",${s.filteredProducts.length},${s.filteredStock},${s.filteredSoldUnits},${s.filteredTotalPurchase},${s.filteredRemainingPurchase},"${s.lastPurchaseDate || ''}"\n`
+    csv += `"${s.category}","${s.code}",${s.products.length},${s.totalStock},${s.filteredSoldUnits},${s.filteredTotalPurchase},${s.remainingPurchase},"${s.lastPurchaseDate || ''}"\n`
   })
   const blob = new Blob([csv], { type: 'text/csv' })
   const url = window.URL.createObjectURL(blob)
