@@ -228,7 +228,7 @@ export const store = reactive({
       list.push({
         id: supMatch?.id || supCode,
         code: supCode,
-        name: supMatch?.name || `${catName} Supplier`,
+        name: supMatch?.name || catName,
         category: catName,
         contact: supMatch?.contact || 'Account Representative',
         email: supMatch?.email || `orders@${catName.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,

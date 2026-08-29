@@ -3,8 +3,8 @@
     <!-- Page Header -->
     <div class="page-header">
       <div>
-        <h1 class="page-title">Suppliers & Category Purchase Ledger</h1>
-        <p class="page-description">Track all product categories, monitor total supplier purchase costs, view live POS deductions, and manage remaining inventory balances.</p>
+        <h1 class="page-title">Suppliers</h1>
+        <p class="page-description">Monitor supplier purchase capital, track in-stock and sold quantities, and review date-filtered purchase balances.</p>
       </div>
       <div class="header-actions">
         <button class="btn btn-outline" @click="exportSuppliersCSV">
@@ -24,9 +24,9 @@
       <div class="card p-4" style="background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div>
-            <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Product Categories</div>
-            <div style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); margin-top: 0.25rem;">{{ store.categorySuppliers.length }}</div>
-            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">All product lines tracked</div>
+            <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Suppliers & Categories</div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); margin-top: 0.25rem;">{{ displayedSuppliers.length }}</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Active supplier lines</div>
           </div>
           <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(37, 99, 235, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center;">
             <Layers style="width: 22px; height: 22px;" />
@@ -37,11 +37,13 @@
       <div class="card p-4" style="background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div>
-            <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Total Purchase (Capital)</div>
+            <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Total Purchase</div>
             <div style="font-size: 1.6rem; font-weight: 800; color: #2563EB; margin-top: 0.25rem;">
-              ₱{{ store.totalCategoryPurchases.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+              ₱{{ totalFilteredPurchases.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
             </div>
-            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Cumulative stock cost supplied</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">
+              {{ (startDate || endDate) ? 'Purchases in date range' : 'Cumulative stock capital' }}
+            </div>
           </div>
           <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(37, 99, 235, 0.1); color: #2563EB; display: flex; align-items: center; justify-content: center;">
             <DollarSign style="width: 22px; height: 22px;" />
@@ -54,9 +56,9 @@
           <div>
             <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Remaining Purchase</div>
             <div style="font-size: 1.6rem; font-weight: 800; color: #059669; margin-top: 0.25rem;">
-              ₱{{ store.totalCategoryRemaining.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+              ₱{{ totalFilteredRemaining.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
             </div>
-            <div style="font-size: 0.75rem; color: #059669; font-weight: 600; margin-top: 0.2rem;">Current unsold stock valuation</div>
+            <div style="font-size: 0.75rem; color: #059669; font-weight: 600; margin-top: 0.2rem;">Current in-stock valuation</div>
           </div>
           <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); color: #059669; display: flex; align-items: center; justify-content: center;">
             <CheckCircle2 style="width: 22px; height: 22px;" />
@@ -67,11 +69,13 @@
       <div class="card p-4" style="background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div>
-            <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Sold Deductions (COGS)</div>
+            <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Total Units Sold</div>
             <div style="font-size: 1.6rem; font-weight: 800; color: #D97706; margin-top: 0.25rem;">
-              -₱{{ store.totalCategorySoldDeductions.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+              {{ totalFilteredSoldUnits.toLocaleString('en-US') }}
             </div>
-            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Deducted via POS receipts</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">
+              {{ (startDate || endDate) ? 'Sold units in date range' : 'Sold across all receipts' }}
+            </div>
           </div>
           <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(217, 119, 6, 0.1); color: #D97706; display: flex; align-items: center; justify-content: center;">
             <ShoppingCart style="width: 22px; height: 22px;" />
@@ -80,112 +84,162 @@
       </div>
     </div>
 
-    <!-- Main Suppliers & Category Ledger Table Card -->
-    <div class="card">
-      <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
-        <div class="search-container" style="max-width: 360px;">
+    <!-- Date Range & Search Control Card -->
+    <div class="card" style="margin-bottom: 1.5rem; padding: 1rem 1.25rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        
+        <!-- Search bar -->
+        <div class="search-container" style="max-width: 320px; flex: 1;">
           <Search class="search-icon" />
-          <input type="text" v-model="search" placeholder="Search category, supplier name, SKU..." />
+          <input type="text" v-model="search" placeholder="Search supplier or category..." />
         </div>
-        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-          <select v-model="selectedCategoryFilter" class="form-select" style="width: 170px; height: 38px; padding: 0.25rem 0.75rem;">
-            <option value="">All Categories</option>
-            <option v-for="cat in store.categorySuppliers" :key="cat.category" :value="cat.category">{{ cat.category }}</option>
-          </select>
-          <select v-model="statusFilter" class="form-select" style="width: 140px; height: 38px; padding: 0.25rem 0.75rem;">
-            <option value="">All Statuses</option>
-            <option value="Active">Active / Stocked</option>
-            <option value="Low Stock">Low Stock</option>
-            <option value="Out of Stock">Out of Stock</option>
-          </select>
-          <input type="date" v-model="filterDate" class="form-input" style="width: 155px; height: 38px; padding: 0.25rem 0.75rem;" title="Filter by Purchase Date" />
-          <button v-if="filterDate || selectedCategoryFilter || statusFilter || search" class="btn btn-outline btn-sm" @click="clearFilters">
-            Clear Filters
+
+        <!-- Date Range Filter Group -->
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 0.4rem;">
+            <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0;">From:</label>
+            <input 
+              type="date" 
+              v-model="startDate" 
+              class="form-input" 
+              style="width: 145px; height: 36px; padding: 0.25rem 0.5rem; font-size: 0.8rem;" 
+              title="Start Date" 
+            />
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 0.4rem;">
+            <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0;">To:</label>
+            <input 
+              type="date" 
+              v-model="endDate" 
+              class="form-input" 
+              style="width: 145px; height: 36px; padding: 0.25rem 0.5rem; font-size: 0.8rem;" 
+              title="End Date" 
+            />
+          </div>
+
+          <!-- Quick Date Range Presets -->
+          <div class="quick-date-pills" style="display: flex; gap: 4px;">
+            <button 
+              type="button" 
+              class="btn-date-pill" 
+              :class="{ active: activeDatePreset === 'today' }" 
+              @click="setDatePreset('today')"
+            >
+              Today
+            </button>
+            <button 
+              type="button" 
+              class="btn-date-pill" 
+              :class="{ active: activeDatePreset === 'week' }" 
+              @click="setDatePreset('week')"
+            >
+              This Week
+            </button>
+            <button 
+              type="button" 
+              class="btn-date-pill" 
+              :class="{ active: activeDatePreset === 'month' }" 
+              @click="setDatePreset('month')"
+            >
+              This Month
+            </button>
+            <button 
+              type="button" 
+              class="btn-date-pill" 
+              :class="{ active: activeDatePreset === 'all' }" 
+              @click="setDatePreset('all')"
+            >
+              All Time
+            </button>
+          </div>
+
+          <button 
+            v-if="startDate || endDate || search" 
+            class="btn btn-outline btn-sm" 
+            style="height: 36px;" 
+            @click="clearFilters"
+          >
+            Reset
           </button>
         </div>
+
       </div>
 
+      <!-- Active Date Range Notice -->
+      <div v-if="startDate || endDate" style="margin-top: 0.65rem; padding-top: 0.65rem; border-top: 1px dashed var(--border); font-size: 0.78rem; color: var(--primary); display: flex; align-items: center; gap: 6px;">
+        <Calendar style="width: 13px; height: 13px;" />
+        <span>Filtered Date Range: <strong>{{ startDate || 'Earliest' }}</strong> to <strong>{{ endDate || 'Latest' }}</strong></span>
+      </div>
+    </div>
+
+    <!-- Main Supplier Table -->
+    <div class="card">
       <div class="table-responsive">
         <table class="table">
           <thead>
             <tr>
-              <th>Category & Supplier</th>
-              <th>Contact Details</th>
+              <th>Supplier Name</th>
               <th style="text-align: center;">In Stock</th>
               <th style="text-align: center;">Units Sold</th>
               <th style="color: #2563EB;">Total Purchase (₱)</th>
-              <th style="color: #D97706;">Sold Deductions (₱)</th>
               <th style="color: #059669; font-weight: 800;">Remaining Purchase (₱)</th>
-              <th>Status</th>
               <th style="text-align: right;">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="s in filteredSuppliers" :key="s.code + s.category">
+            <tr v-for="s in displayedSuppliers" :key="s.code + s.category">
+              <!-- Single Supplier Name -->
               <td>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                  <span class="user-pill" style="font-size: 0.8rem; font-weight: 700; padding: 3px 10px; background: var(--primary-light); color: var(--primary);">
-                    {{ s.category }}
+                  <strong style="color: var(--text-main); font-size: 0.95rem;">{{ s.category }}</strong>
+                  <span style="font-family: monospace; font-size: 0.72rem; color: var(--text-muted); background: var(--input-bg); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border);">
+                    {{ s.code }}
                   </span>
-                  <span style="font-family: monospace; font-size: 0.75rem; color: var(--text-muted);">{{ s.code }}</span>
                 </div>
-                <strong style="color: var(--text-main); font-size: 0.92rem; display: block; margin-top: 3px;">{{ s.name }}</strong>
-                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
                   {{ s.productCount }} {{ s.productCount === 1 ? 'product' : 'products' }} registered
                 </div>
               </td>
-              <td>
-                <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">{{ s.contact }}</div>
-                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ s.phone }}</div>
-                <div style="font-size: 0.72rem; color: var(--text-muted); opacity: 0.85;">{{ s.email }}</div>
-              </td>
+
+              <!-- In Stock Units -->
               <td style="text-align: center;">
-                <span style="font-weight: 700; font-size: 0.95rem;" :style="{ color: s.totalStock === 0 ? '#DC2626' : (s.status === 'Low Stock' ? '#D97706' : 'var(--text-main)') }">
+                <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">
                   {{ s.totalStock }}
                 </span>
                 <div style="font-size: 0.7rem; color: var(--text-muted);">units</div>
               </td>
+
+              <!-- Units Sold (date-range sensitive) -->
               <td style="text-align: center;">
                 <span style="font-weight: 700; font-size: 0.95rem; color: #D97706;">
-                  {{ s.totalSoldUnits }}
+                  {{ s.dateFilteredSoldUnits }}
                 </span>
                 <div style="font-size: 0.7rem; color: var(--text-muted);">sold</div>
               </td>
-              <!-- Total Purchase Column -->
+
+              <!-- Total Purchase Column (date-range sensitive) -->
               <td>
                 <div class="font-bold" style="color: #2563EB; font-size: 0.95rem;">
-                  ₱{{ Number(s.totalPurchase).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+                  ₱{{ Number(s.dateFilteredTotalPurchase).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
                 </div>
                 <div v-if="s.lastPurchaseDate" style="font-size: 0.7rem; color: var(--text-muted);">
                   <Calendar style="width: 11px; height: 11px; display: inline-block; vertical-align: middle;" /> {{ s.lastPurchaseDate }}
                 </div>
               </td>
-              <!-- Sold Deductions Column -->
-              <td>
-                <div class="font-bold" style="color: #D97706; font-size: 0.95rem;">
-                  -₱{{ Number(s.soldCost).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
-                </div>
-                <div style="font-size: 0.7rem; color: var(--text-muted);">via POS receipts</div>
-              </td>
+
               <!-- Remaining Purchase Column -->
               <td>
                 <div class="font-bold" style="color: #059669; font-size: 1.05rem; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 6px; display: inline-block;">
                   ₱{{ Number(s.remainingPurchase).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
                 </div>
-                <div style="font-size: 0.7rem; color: #059669; font-weight: 500; margin-top: 2px;">in-stock capital</div>
               </td>
-              <td>
-                <span class="status-badge" :class="getStatusBadgeClass(s)">
-                  {{ s.status }}
-                </span>
-              </td>
+
+              <!-- Actions (Restock button removed; View Products, Log PO, History, Delete retained) -->
               <td style="text-align: right;">
                 <div style="display: inline-flex; align-items: center; gap: 4px;">
-                  <button class="btn btn-mint btn-sm" title="Add Product Stock to this Category" @click="openQuickRestockModal(s)">
-                    <PlusCircle style="width: 14px; height: 14px;" /> Restock
-                  </button>
-                  <button class="icon-btn" title="View Category Products & Cost Breakdown" @click="openCategoryProductsModal(s)">
-                    <Package style="width: 16px; height: 16px; color: var(--primary);" />
+                  <button class="btn btn-outline btn-sm" title="View Products in this Category" @click="openCategoryProductsModal(s)">
+                    <Package style="width: 14px; height: 14px;" /> View Products
                   </button>
                   <button class="icon-btn" title="Log Dated Purchase Order" @click="openLogPurchaseModal(s)">
                     <FileText style="width: 15px; height: 15px; color: #64748B;" />
@@ -199,10 +253,11 @@
                 </div>
               </td>
             </tr>
-            <tr v-if="!filteredSuppliers.length">
-              <td colspan="9" class="text-center" style="padding: 3.5rem 0; color: var(--text-muted);">
+
+            <tr v-if="!displayedSuppliers.length">
+              <td colspan="6" class="text-center" style="padding: 3.5rem 0; color: var(--text-muted);">
                 <Package style="width: 42px; height: 42px; opacity: 0.3; margin-bottom: 0.5rem;" />
-                <div>No category or supplier matching the selected filters.</div>
+                <div>No suppliers found matching the criteria.</div>
               </td>
             </tr>
           </tbody>
@@ -211,7 +266,7 @@
     </div>
 
     <!-- ==================================================================== -->
-    <!-- MODAL: ADD STOCK TO CATEGORY / PRODUCT (RESTOCK ACTION)               -->
+    <!-- MODAL: ADD STOCK TO CATEGORY / PRODUCT                               -->
     <!-- ==================================================================== -->
     <div v-if="showRestockModal" class="modal-overlay" @click.self="showRestockModal = false">
       <div class="modal-card" style="max-width: 580px;">
@@ -222,14 +277,13 @@
               <span>Add Stock to {{ restockForm.category }}</span>
             </h3>
             <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
-              Stock replenishment will automatically update the supplier's Total Purchase and Remaining Purchase.
+              Adding stock will automatically increase the supplier's Total Purchase and Remaining Purchase.
             </p>
           </div>
           <button class="icon-btn" style="width: 32px; height: 32px;" @click="showRestockModal = false"><X style="width: 16px; height: 16px;" /></button>
         </div>
 
         <form @submit.prevent="saveRestock" class="modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
-          <!-- Category Selector -->
           <div class="form-group">
             <label>Product Category <span style="color: var(--red-600);">*</span></label>
             <select v-model="restockForm.category" class="form-select" @change="onRestockCategoryChange" required>
@@ -237,7 +291,6 @@
             </select>
           </div>
 
-          <!-- Product Mode: Select Existing Product OR Add New Product -->
           <div class="form-group">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
               <label style="margin-bottom: 0;">Target Product</label>
@@ -251,7 +304,6 @@
               </button>
             </div>
 
-            <!-- Existing Product Select -->
             <select 
               v-if="!restockForm.isNewProduct" 
               v-model="restockForm.selectedProductSku" 
@@ -265,7 +317,6 @@
               </option>
             </select>
 
-            <!-- New Product Fields if creating new -->
             <div v-else style="display: flex; flex-direction: column; gap: 0.75rem; background: var(--input-bg); padding: 0.75rem; border-radius: 8px; border: 1px dashed var(--border);">
               <div>
                 <label style="font-size: 0.78rem;">New Product Name <span style="color: var(--red-600);">*</span></label>
@@ -284,7 +335,6 @@
             </div>
           </div>
 
-          <!-- Quantity to Add & Unit Cost -->
           <div class="form-row">
             <div class="form-group">
               <label>Stock Quantity to Add <span style="color: var(--red-600);">*</span></label>
@@ -296,7 +346,6 @@
             </div>
           </div>
 
-          <!-- PO Reference & Batch Notes -->
           <div class="form-row">
             <div class="form-group">
               <label>PO Reference # (Optional)</label>
@@ -304,14 +353,13 @@
             </div>
             <div class="form-group">
               <label>Batch / Invoice Note</label>
-              <input type="text" v-model="restockForm.notes" class="form-input" placeholder="e.g. Batch #42 Delivery" />
+              <input type="text" v-model="restockForm.notes" class="form-input" placeholder="e.g. Batch Delivery" />
             </div>
           </div>
 
-          <!-- Live Cost Calculation Card -->
           <div style="background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem; display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <div style="font-size: 0.75rem; color: var(--text-muted);">Added Supplier Purchase Cost:</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Added Supplier Capital Cost:</div>
               <div style="font-size: 1.15rem; font-weight: 800; color: var(--primary);">
                 +₱{{ (Number(restockForm.quantityToAdd || 0) * Number(restockForm.unitCost || 0)).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
               </div>
@@ -343,49 +391,42 @@
           <div>
             <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
               <Package style="width: 22px; height: 22px; color: var(--primary);" />
-              <span>{{ activeCategorySupplier.category }} Products & Cost Breakdown</span>
-              <span class="user-pill" style="font-size: 0.75rem; padding: 2px 8px;">{{ activeCategorySupplier.code }}</span>
+              <span>{{ activeCategorySupplier.category }} Products</span>
+              <span style="font-family: monospace; font-size: 0.75rem; background: var(--input-bg); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border);">{{ activeCategorySupplier.code }}</span>
             </h3>
             <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
-              View all products assigned under this category, individual unit costs, units sold, and current remaining purchase balances.
+              All products assigned under {{ activeCategorySupplier.category }} with individual costs and remaining stock valuation.
             </p>
           </div>
           <button class="icon-btn" style="width: 32px; height: 32px;" @click="showCategoryProductsModal = false"><X style="width: 16px; height: 16px;" /></button>
         </div>
 
         <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
-          <!-- Category Summary Pill Bar -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.75rem; background: var(--input-bg); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border);">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; background: var(--input-bg); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border);">
             <div>
-              <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Total Category Purchase</span>
+              <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Total Purchase</span>
               <strong style="font-size: 0.95rem; color: #2563EB;">₱{{ Number(activeCategorySupplier.totalPurchase).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</strong>
-            </div>
-            <div>
-              <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Sold Deductions (COGS)</span>
-              <strong style="font-size: 0.95rem; color: #D97706;">-₱{{ Number(activeCategorySupplier.soldCost).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</strong>
             </div>
             <div>
               <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Remaining Purchase</span>
               <strong style="font-size: 0.95rem; color: #059669;">₱{{ Number(activeCategorySupplier.remainingPurchase).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</strong>
             </div>
             <div>
-              <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Current In-Stock Units</span>
+              <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Current In-Stock</span>
               <strong style="font-size: 0.95rem; color: var(--text-main);">{{ activeCategorySupplier.totalStock }} units</strong>
             </div>
           </div>
 
-          <!-- Filter / Search Inside Category Products -->
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
             <div class="search-container" style="max-width: 320px;">
               <Search class="search-icon" />
-              <input type="text" v-model="categoryProductSearch" placeholder="Search product SKU or name..." />
+              <input type="text" v-model="categoryProductSearch" placeholder="Search SKU or product name..." />
             </div>
             <button class="btn btn-mint btn-sm" @click="openQuickRestockModal(activeCategorySupplier)">
               <PlusCircle style="width: 14px; height: 14px;" /> Add Stock to {{ activeCategorySupplier.category }}
             </button>
           </div>
 
-          <!-- Products Table -->
           <div class="table-responsive" style="max-height: 360px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px;">
             <table class="table">
               <thead>
@@ -393,22 +434,17 @@
                   <th>SKU</th>
                   <th>Product Name</th>
                   <th style="text-align: center;">In Stock</th>
-                  <th>Unit Cost (Capital)</th>
-                  <th>Selling Price</th>
-                  <th style="text-align: center;">Sold (POS)</th>
+                  <th>Unit Cost (₱)</th>
+                  <th>Selling Price (₱)</th>
+                  <th style="text-align: center;">Sold (Units)</th>
                   <th style="color: #059669;">Remaining Cost (₱)</th>
-                  <th style="text-align: right;">Action</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="p in filteredActiveCategoryProducts" :key="p.sku || p.id">
                   <td><span style="font-family: monospace; font-weight: 700; color: var(--primary);">{{ p.sku }}</span></td>
                   <td><strong style="color: var(--text-main);">{{ p.name }}</strong></td>
-                  <td style="text-align: center;">
-                    <span :style="{ fontWeight: '700', color: p.quantity <= (p.min_stock || 10) ? '#DC2626' : 'var(--text-main)' }">
-                      {{ p.quantity }}
-                    </span>
-                  </td>
+                  <td style="text-align: center; font-weight: 700;">{{ p.quantity }}</td>
                   <td>₱{{ Number(p.cost).toFixed(2) }}</td>
                   <td>₱{{ Number(p.price).toFixed(2) }}</td>
                   <td style="text-align: center; color: #D97706; font-weight: 600;">
@@ -417,14 +453,9 @@
                   <td class="font-bold" style="color: #059669;">
                     ₱{{ (Number(p.quantity) * Number(p.cost)).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
                   </td>
-                  <td style="text-align: right;">
-                    <button class="btn btn-outline btn-sm" title="Restock this product" @click="quickRestockSingleProduct(p)">
-                      + Restock
-                    </button>
-                  </td>
                 </tr>
                 <tr v-if="!filteredActiveCategoryProducts.length">
-                  <td colspan="8" class="text-center" style="padding: 2.5rem 0; color: var(--text-muted);">
+                  <td colspan="7" class="text-center" style="padding: 2.5rem 0; color: var(--text-muted);">
                     No products registered in this category yet.
                   </td>
                 </tr>
@@ -440,14 +471,14 @@
     </div>
 
     <!-- ==================================================================== -->
-    <!-- MODAL: REGISTER NEW SUPPLIER / BRAND                                  -->
+    <!-- MODAL: REGISTER NEW SUPPLIER                                          -->
     <!-- ==================================================================== -->
     <div v-if="showRegisterModal" class="modal-overlay" @click.self="showRegisterModal = false">
       <div class="modal-card">
         <div class="modal-header">
           <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
             <Users style="width: 20px; height: 20px; color: var(--primary);" />
-            <span>Register New Supplier</span>
+            <span>Register Supplier</span>
           </h3>
           <button class="icon-btn" style="width: 32px; height: 32px;" @click="showRegisterModal = false"><X style="width: 16px; height: 16px;" /></button>
         </div>
@@ -458,27 +489,19 @@
               <input type="text" v-model="supForm.code" class="form-input" required />
             </div>
             <div class="form-group">
-              <label>Category Line</label>
-              <input type="text" v-model="supForm.category" class="form-input" required placeholder="e.g. Rebisco" />
+              <label>Category / Supplier Name <span style="color: var(--red-600);">*</span></label>
+              <input type="text" v-model="supForm.category" class="form-input" required placeholder="e.g. Caceras prime or Rebisco" />
             </div>
-          </div>
-          <div class="form-group">
-            <label>Supplier / Company Name <span style="color: var(--red-600);">*</span></label>
-            <input type="text" v-model="supForm.name" class="form-input" required placeholder="e.g. Rebisco Distribution Inc." />
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label>Contact Person</label>
+              <label>Contact Person (Optional)</label>
               <input type="text" v-model="supForm.contact" class="form-input" placeholder="Representative Name" />
             </div>
             <div class="form-group">
-              <label>Phone</label>
+              <label>Phone (Optional)</label>
               <input type="text" v-model="supForm.phone" class="form-input" placeholder="+63 9XX XXX XXXX" />
             </div>
-          </div>
-          <div class="form-group">
-            <label>Email Address <span style="color: var(--red-600);">*</span></label>
-            <input type="email" v-model="supForm.email" class="form-input" required />
           </div>
           <div class="form-group">
             <label>Business Address</label>
@@ -509,7 +532,7 @@
             <label>Supplier / Category</label>
             <select v-model="purForm.supplierCode" class="form-select" required>
               <option v-for="s in store.categorySuppliers" :key="s.code" :value="s.code">
-                {{ s.category }} ({{ s.name }})
+                {{ s.category }}
               </option>
             </select>
           </div>
@@ -525,7 +548,7 @@
           </div>
           <div class="form-group">
             <label>Item Description / Batch Details <span style="color: var(--red-600);">*</span></label>
-            <input type="text" v-model="purForm.items" class="form-input" placeholder="e.g. 50x Rebisco Fudgee Barr, 20x Crackers" required />
+            <input type="text" v-model="purForm.items" class="form-input" placeholder="e.g. Batch stock delivery" required />
           </div>
           <div class="form-row">
             <div class="form-group">
@@ -551,23 +574,22 @@
     </div>
 
     <!-- ==================================================================== -->
-    <!-- MODAL: SUPPLIER PURCHASE HISTORY & DATE LEDGER                       -->
+    <!-- MODAL: PURCHASE HISTORY & DATE LEDGER                                -->
     <!-- ==================================================================== -->
     <div v-if="showHistoryModal" class="modal-overlay" @click.self="showHistoryModal = false">
       <div class="modal-card" style="max-width: 860px; width: 95%;">
         <div class="modal-header">
           <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
             <History style="width: 22px; height: 22px; color: var(--primary);" />
-            <span>Purchase History & Date Ledger — {{ activeSupplier?.category || activeSupplier?.name }}</span>
+            <span>Purchase History & Date Ledger — {{ activeSupplier?.category }}</span>
           </h3>
           <button class="icon-btn" style="width: 32px; height: 32px;" @click="showHistoryModal = false"><X style="width: 16px; height: 16px;" /></button>
         </div>
         <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
           <div style="display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border);">
             <div>
-              <strong>Category:</strong> {{ activeSupplier?.category }} | 
-              <strong>Code:</strong> {{ activeSupplier?.code }} |
-              <strong>Contact:</strong> {{ activeSupplier?.contact }}
+              <strong>Supplier:</strong> {{ activeSupplier?.category }} | 
+              <strong>Code:</strong> {{ activeSupplier?.code }}
             </div>
             <div class="status-badge status-completed" style="font-size: 0.9rem;">
               Total Spent: ₱{{ activeSupplierTotalSpent.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
@@ -603,7 +625,7 @@
                 </tr>
                 <tr v-if="!activeSupplierPurchases.length">
                   <td colspan="7" class="text-center" style="padding: 2rem 0; color: var(--text-muted);">
-                    No purchase history logged for this category/supplier yet.
+                    No purchase history logged for this supplier yet.
                   </td>
                 </tr>
               </tbody>
@@ -641,9 +663,9 @@ import {
 } from 'lucide-vue-next'
 
 const search = ref('')
-const selectedCategoryFilter = ref('')
-const filterDate = ref('')
-const statusFilter = ref('')
+const startDate = ref('')
+const endDate = ref('')
+const activeDatePreset = ref('all')
 
 // Modals
 const showRegisterModal = ref(false)
@@ -691,46 +713,123 @@ const purForm = ref({
   status: 'Paid'
 })
 
-function clearFilters() {
-  search.value = ''
-  selectedCategoryFilter.value = ''
-  filterDate.value = ''
-  statusFilter.value = ''
+function setDatePreset(preset) {
+  activeDatePreset.value = preset
+  const now = new Date()
+  const todayStr = now.toISOString().slice(0, 10)
+
+  if (preset === 'today') {
+    startDate.value = todayStr
+    endDate.value = todayStr
+  } else if (preset === 'week') {
+    const day = now.getDay()
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1) // Monday
+    const monday = new Date(now.setDate(diff))
+    startDate.value = monday.toISOString().slice(0, 10)
+    endDate.value = todayStr
+  } else if (preset === 'month') {
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
+    startDate.value = firstDay.toISOString().slice(0, 10)
+    endDate.value = todayStr
+  } else if (preset === 'all') {
+    startDate.value = ''
+    endDate.value = ''
+  }
 }
 
-const filteredSuppliers = computed(() => {
-  return store.categorySuppliers.filter(s => {
-    const q = search.value.toLowerCase().trim()
-    const matchesSearch = !q || 
-      s.name.toLowerCase().includes(q) || 
-      s.code.toLowerCase().includes(q) || 
-      s.contact.toLowerCase().includes(q) || 
-      s.category.toLowerCase().includes(q) ||
-      s.products.some(p => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))
+function clearFilters() {
+  search.value = ''
+  startDate.value = ''
+  endDate.value = ''
+  activeDatePreset.value = 'all'
+}
 
-    const matchesCategory = !selectedCategoryFilter.value || s.category.toLowerCase() === selectedCategoryFilter.value.toLowerCase()
-    
-    let matchesStatus = true
-    if (statusFilter.value) {
-      if (statusFilter.value === 'Active') {
-        matchesStatus = s.status === 'Active' || s.status === 'In Stock'
-      } else {
-        matchesStatus = s.status === statusFilter.value
+// Compute Date-Filtered metrics for each supplier
+const displayedSuppliers = computed(() => {
+  const q = search.value.toLowerCase().trim()
+  const sDate = startDate.value ? new Date(startDate.value + 'T00:00:00') : null
+  const eDate = endDate.value ? new Date(endDate.value + 'T23:59:59') : null
+  const isDateFiltered = !!(sDate || eDate)
+
+  return store.categorySuppliers.map(s => {
+    // 1. Calculate sold units within date range
+    let rangeSoldUnits = 0
+    let rangeSoldCost = 0
+
+    store.receipts.forEach(r => {
+      if (!r.items || !Array.isArray(r.items)) return
+      
+      let inDateRange = true
+      if (isDateFiltered && r.created_at) {
+        const rDate = new Date(r.created_at)
+        if (sDate && rDate < sDate) inDateRange = false
+        if (eDate && rDate > eDate) inDateRange = false
       }
-    }
-    
-    let matchesDate = true
-    if (filterDate.value) {
-      const supPurchases = store.purchases.filter(p => 
-        p.supplierCode === s.code || 
-        p.supplierCode === s.id || 
-        p.supplierCode === s.category
-      )
-      matchesDate = supPurchases.some(p => p.date === filterDate.value) || s.lastPurchaseDate === filterDate.value
-    }
 
-    return matchesSearch && matchesCategory && matchesStatus && matchesDate
+      if (inDateRange) {
+        r.items.forEach(item => {
+          const prod = s.products.find(p => p.name.toLowerCase().trim() === (item.item_desc || '').toLowerCase().trim())
+          if (prod) {
+            const qty = Number(item.quantity) || 0
+            const unitCost = Number(prod.cost) || 0
+            rangeSoldUnits += qty
+            rangeSoldCost += qty * unitCost
+          }
+        })
+      }
+    })
+
+    // 2. Calculate purchases within date range
+    const supCode = (s.code || '').toLowerCase()
+    const catName = (s.category || '').toLowerCase()
+
+    let rangePoAmount = 0
+    store.purchases.forEach(p => {
+      const pSupCode = (p.supplierCode || '').toLowerCase()
+      if (pSupCode === supCode || pSupCode === catName) {
+        let inDateRange = true
+        if (isDateFiltered && p.date) {
+          const pDate = new Date(p.date + 'T12:00:00')
+          if (sDate && pDate < sDate) inDateRange = false
+          if (eDate && pDate > eDate) inDateRange = false
+        }
+        if (inDateRange) {
+          rangePoAmount += Number(p.amount) || 0
+        }
+      }
+    })
+
+    // If date range is active, compute date-scoped total purchase and sold units
+    const dateFilteredTotalPurchase = isDateFiltered
+      ? (rangePoAmount > 0 ? rangePoAmount : (rangeSoldCost + s.remainingPurchase))
+      : s.totalPurchase
+
+    const dateFilteredSoldUnits = isDateFiltered ? rangeSoldUnits : s.totalSoldUnits
+
+    return {
+      ...s,
+      dateFilteredTotalPurchase: dateFilteredTotalPurchase,
+      dateFilteredSoldUnits: dateFilteredSoldUnits
+    }
+  }).filter(s => {
+    if (!q) return true
+    return s.category.toLowerCase().includes(q) || 
+      s.code.toLowerCase().includes(q) || 
+      s.name.toLowerCase().includes(q) ||
+      s.products.some(p => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))
   })
+})
+
+const totalFilteredPurchases = computed(() => {
+  return displayedSuppliers.value.reduce((sum, s) => sum + Number(s.dateFilteredTotalPurchase || 0), 0)
+})
+
+const totalFilteredRemaining = computed(() => {
+  return displayedSuppliers.value.reduce((sum, s) => sum + Number(s.remainingPurchase || 0), 0)
+})
+
+const totalFilteredSoldUnits = computed(() => {
+  return displayedSuppliers.value.reduce((sum, s) => sum + Number(s.dateFilteredSoldUnits || 0), 0)
 })
 
 const activeSupplierPurchases = computed(() => {
@@ -780,12 +879,6 @@ function getProductUnitsSold(productName) {
   return sold
 }
 
-function getStatusBadgeClass(s) {
-  if (s.totalStock === 0 || s.status === 'Out of Stock') return 'status-cancelled'
-  if (s.status === 'Low Stock') return 'status-pending'
-  return 'status-completed'
-}
-
 function openQuickRestockModal(categoryItem) {
   const cat = categoryItem ? categoryItem.category : (store.categories[0]?.name || 'Rebisco')
   restockForm.value.category = cat
@@ -829,17 +922,6 @@ function onRestockProductSelect() {
   if (prod) {
     restockForm.value.unitCost = Number(prod.cost) || 0
   }
-}
-
-function quickRestockSingleProduct(prod) {
-  restockForm.value.category = prod.category || 'General'
-  restockForm.value.isNewProduct = false
-  restockForm.value.selectedProductSku = prod.sku
-  restockForm.value.quantityToAdd = 25
-  restockForm.value.unitCost = Number(prod.cost) || 25
-  restockForm.value.poNumber = 'PO-' + Date.now().toString().slice(-6)
-  restockForm.value.notes = 'Direct Item Restock'
-  showRestockModal.value = true
 }
 
 async function saveRestock() {
@@ -898,7 +980,7 @@ function openRegisterSupplierModal() {
     contact: '',
     email: '',
     phone: '',
-    category: store.categories[0]?.name || 'Rebisco',
+    category: 'Rebisco',
     address: '',
     status: 'Active'
   }
@@ -906,10 +988,15 @@ function openRegisterSupplierModal() {
 }
 
 function saveSupplier() {
-  if (!supForm.value.name || !supForm.value.email) return
-  store.addSupplier({ ...supForm.value, totalPurchase: 0, totalOrders: 0 })
+  if (!supForm.value.category) return
+  store.addSupplier({
+    ...supForm.value,
+    name: supForm.value.category,
+    totalPurchase: 0,
+    totalOrders: 0
+  })
   showRegisterModal.value = false
-  alert(`Supplier "${supForm.value.name}" registered under category "${supForm.value.category}"!`)
+  alert(`Supplier "${supForm.value.category}" registered!`)
 }
 
 function openLogPurchaseModal(s) {
@@ -953,15 +1040,41 @@ function deleteSup(code) {
 }
 
 function exportSuppliersCSV() {
-  let csv = 'Category,Supplier Code,Supplier Name,Contact,Phone,Products Count,In-Stock Units,Sold Units,Total Purchase,Sold Deductions,Remaining Purchase,Last Purchase Date,Status\n'
-  store.categorySuppliers.forEach(s => {
-    csv += `"${s.category}","${s.code}","${s.name}","${s.contact}","${s.phone}",${s.productCount},${s.totalStock},${s.totalSoldUnits},${s.totalPurchase},${s.soldCost},${s.remainingPurchase},"${s.lastPurchaseDate || ''}","${s.status}"\n`
+  let csv = 'Supplier Name,Supplier Code,Products Count,In-Stock Units,Sold Units,Total Purchase,Remaining Purchase,Last Purchase Date\n'
+  displayedSuppliers.value.forEach(s => {
+    csv += `"${s.category}","${s.code}",${s.productCount},${s.totalStock},${s.dateFilteredSoldUnits},${s.dateFilteredTotalPurchase},${s.remainingPurchase},"${s.lastPurchaseDate || ''}"\n`
   })
   const blob = new Blob([csv], { type: 'text/csv' })
   const url = window.URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'Suppliers_Category_Purchase_Ledger.csv'
+  a.download = 'Suppliers_Date_Filtered_Ledger.csv'
   a.click()
 }
 </script>
+
+<style scoped>
+.btn-date-pill {
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-date-pill:hover {
+  background: var(--surface);
+  color: var(--text-main);
+  border-color: var(--primary);
+}
+
+.btn-date-pill.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+</style>
