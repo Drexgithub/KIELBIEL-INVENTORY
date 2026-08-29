@@ -309,7 +309,8 @@ export const store = reactive({
             price: Number(p.price || p.selling_price || 0),
             quantity: qty,
             min_stock: minStock,
-            status: computedStatus
+            status: computedStatus,
+            created_at: p.created_at ? (typeof p.created_at === 'string' ? p.created_at.slice(0, 10) : new Date(p.created_at).toISOString().slice(0, 10)) : new Date().toISOString().slice(0, 10)
           }
         })
       }
@@ -455,6 +456,8 @@ export const store = reactive({
       supplierCode: supCode,
       poNumber: finalPoNumber,
       date: today,
+      productSku: prod.sku,
+      productName: prod.name,
       items: notes ? `${notes} (+${qty}x ${prod.name})` : `Restock +${qty}x ${prod.name} (${prod.sku})`,
       amount: addedAmount,
       method: 'Stock Replenishment',
@@ -472,7 +475,7 @@ export const store = reactive({
       this.suppliers.unshift({
         id: supCode,
         code: supCode,
-        name: `${categoryName} Supplier`,
+        name: categoryName,
         contact: 'Sales Representative',
         email: `orders@${categoryName.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
         phone: '+63 917 888 1234',
@@ -525,6 +528,7 @@ export const store = reactive({
     const status = qty === 0 ? 'Out of Stock' : (qty <= minStock ? 'Low Stock' : 'In Stock')
     const finalSku = (product.sku && String(product.sku).trim()) ? String(product.sku).trim() : this.getNextSku()
     const catName = (product.category && String(product.category).trim()) ? String(product.category).trim() : 'General'
+    const today = product.created_at || new Date().toISOString().slice(0, 10)
 
     // Auto-register category if not existing
     const catExists = this.categories.some(c => c.name.toLowerCase() === catName.toLowerCase())
@@ -545,19 +549,21 @@ export const store = reactive({
       cost: Number(product.cost) || 0,
       price: Number(product.price) || 0,
       min_stock: minStock,
-      status: status
+      status: status,
+      created_at: today
     }
 
     // If initial quantity > 0, also log initial stock purchase for supplier ledger
     if (qty > 0) {
       const supCode = `SUP-${catName.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5) || 'GEN'}`
       const initialAmount = qty * (Number(product.cost) || 0)
-      const today = new Date().toISOString().slice(0, 10)
       this.purchases.unshift({
         id: 'PUR-' + Math.floor(1000 + Math.random() * 9000),
         supplierCode: supCode,
         poNumber: 'PO-' + Date.now().toString().slice(-6),
         date: today,
+        productSku: finalSku,
+        productName: product.name,
         items: `Initial Catalog Stock: ${qty}x ${product.name}`,
         amount: initialAmount,
         method: 'Inventory Setup',
