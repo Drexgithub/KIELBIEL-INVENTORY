@@ -115,52 +115,6 @@
 
           <div class="form-row">
             <div class="form-group">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-                <label style="margin-bottom: 0;">Category <span style="color: var(--red-600);">*</span></label>
-                <button 
-                  type="button" 
-                  class="btn-link" 
-                  style="font-size: 0.78rem; font-weight: 700; color: var(--primary);"
-                  @click="toggleCustomCategory"
-                >
-                  {{ isCustomCategory ? '← Choose Existing' : '+ New Category' }}
-                </button>
-              </div>
-
-              <!-- Standard Dropdown Select -->
-              <select 
-                v-if="!isCustomCategory" 
-                v-model="form.category" 
-                class="form-select" 
-                @change="onCategorySelectChange"
-                required
-              >
-                <option value="" disabled>-- Select Product Category --</option>
-                <option v-for="catName in allCategoriesList" :key="catName" :value="catName">
-                  {{ catName }}
-                </option>
-                <option value="__NEW_CATEGORY__">+ Add New Category...</option>
-              </select>
-
-              <!-- Text Input for Custom Category -->
-              <div v-else style="display: flex; gap: 6px;">
-                <input 
-                  type="text" 
-                  v-model="form.category" 
-                  class="form-input" 
-                  placeholder="Enter new category name (e.g. Snacks)..." 
-                  required 
-                />
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Initial Quantity</label>
-              <input type="number" v-model.number="form.quantity" min="0" class="form-input" required />
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
               <label>Cost Price (Capital ₱) <span style="color: var(--red-600);">*</span></label>
               <input type="number" step="0.01" v-model.number="form.cost" min="0" class="form-input" required />
             </div>
@@ -170,9 +124,55 @@
             </div>
           </div>
 
+          <div class="form-row">
+            <div class="form-group">
+              <label>Initial Quantity</label>
+              <input type="number" v-model.number="form.quantity" min="0" class="form-input" required />
+            </div>
+            <div class="form-group">
+              <label>Min Stock Threshold</label>
+              <input type="number" v-model.number="form.min_stock" min="1" class="form-input" placeholder="10" />
+            </div>
+          </div>
+
+          <!-- Category dropdown at the bottom -->
           <div class="form-group">
-            <label>Min Stock Threshold</label>
-            <input type="number" v-model.number="form.min_stock" min="1" class="form-input" placeholder="10" />
+            <label>Category <span style="color: var(--red-600);">*</span></label>
+
+            <!-- Standard Dropdown Select -->
+            <select 
+              v-if="!isCustomCategory" 
+              v-model="form.category" 
+              class="form-select" 
+              @change="onCategorySelectChange"
+              required
+            >
+              <option value="" disabled>-- Select Product Category --</option>
+              <option v-for="catName in allCategoriesList" :key="catName" :value="catName">
+                {{ catName }}
+              </option>
+              <option value="__NEW_CATEGORY__">+ Add New Category...</option>
+            </select>
+
+            <!-- Text Input for Custom Category -->
+            <div v-else style="display: flex; gap: 6px;">
+              <input 
+                type="text" 
+                v-model="form.category" 
+                class="form-input" 
+                placeholder="Enter new category name (e.g. Snacks)..." 
+                required 
+                autoFocus
+              />
+              <button 
+                type="button" 
+                class="btn btn-outline btn-sm" 
+                style="white-space: nowrap;"
+                @click="cancelCustomCategory"
+              >
+                Select from List
+              </button>
+            </div>
           </div>
 
           <div class="modal-footer">
@@ -273,14 +273,10 @@ const allCategoriesList = computed(() => {
   return store.allCategoryNames || store.categories.map(c => c.name)
 })
 
-function toggleCustomCategory() {
-  isCustomCategory.value = !isCustomCategory.value
-  if (!isCustomCategory.value) {
-    if (!form.value.category || !allCategoriesList.value.includes(form.value.category)) {
-      form.value.category = allCategoriesList.value[0] || 'General'
-    }
-  } else {
-    form.value.category = ''
+function cancelCustomCategory() {
+  isCustomCategory.value = false
+  if (!form.value.category || !allCategoriesList.value.includes(form.value.category)) {
+    form.value.category = allCategoriesList.value[0] || 'General'
   }
 }
 
