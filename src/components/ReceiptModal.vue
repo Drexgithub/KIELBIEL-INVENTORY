@@ -159,8 +159,8 @@ const paginatedPages = computed(() => {
     }]
   }
 
-  // Printable page capacity units (px equivalent in print container of ~262mm)
-  const TOTAL_PAGE_CAPACITY = 940
+  // Printable page capacity units (px equivalent in print container with 2.54cm margins, ~246mm)
+  const TOTAL_PAGE_CAPACITY = 880
   const PAGE_1_HEADER_SPACE = 210 // Company Header + Meta Grid + Table <thead>
   const TOTALS_AND_SIG_SPACE = 160 // Subtotal, Grand Total, Signatures, margins
 
@@ -486,7 +486,7 @@ function printReceipt() {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 16mm 18mm !important;
+    margin: 2.54cm !important;
   }
 
   html, body {
@@ -538,9 +538,9 @@ function printReceipt() {
 
   .print-page {
     width: 100% !important;
-    min-height: 262mm !important;
-    height: 262mm !important;
-    max-height: 262mm !important;
+    min-height: 246mm !important;
+    height: 246mm !important;
+    max-height: 246mm !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: flex-start !important;
