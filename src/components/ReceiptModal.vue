@@ -2,107 +2,111 @@
   <div v-if="store.activeReceiptModal" id="receiptModal" class="modal-overlay" @click.self="store.closeReceipt">
     <div class="receipt-card printable-a4-document">
       
-      <!-- Company Official Header -->
-      <div class="receipt-header">
-        <h1 class="company-title">KIEL BIEL CONSUMER GOODS TRADING</h1>
-        <p class="company-subtitle">Brgy.42 Rawis, Legazpi City</p>
-        <p class="company-subtitle">Cp# 09985317204</p>
-        <div class="official-invoice-tag">OFFICIAL RECEIPT / INVOICE</div>
-      </div>
-
-      <!-- Receipt Metadata Grid -->
-      <div class="receipt-meta-grid">
-        <div class="meta-column">
-          <div><span class="meta-label">Customer Name:</span> <strong class="meta-val">{{ receipt.customer_name || 'Walk-in Customer' }}</strong></div>
-          <div><span class="meta-label">Customer Address:</span> <span class="meta-val">{{ customerAddress }}</span></div>
-          <div><span class="meta-label">Cashier:</span> <span class="meta-val">{{ receipt.cashier_name }}</span></div>
-          <div><span class="meta-label">Payment Method:</span> <span class="meta-val">{{ receipt.payment_method }}</span></div>
-        </div>
-        <div class="meta-column text-right">
-          <div><span class="meta-label">Receipt No:</span> <strong class="meta-val text-primary">{{ receipt.receipt_no }}</strong></div>
-          <div><span class="meta-label">Invoice Ref:</span> <span class="meta-val">{{ receipt.invoice_no }}</span></div>
-          <div><span class="meta-label">Date & Time:</span> <span class="meta-val">{{ receipt.created_at }}</span></div>
-        </div>
-      </div>
-
-      <!-- Itemized Table -->
-      <table class="receipt-items-table">
-        <thead>
-          <tr>
-            <th style="width: 45%;">Item Description</th>
-            <th style="text-align: center; width: 15%;">Qty</th>
-            <th style="text-align: right; width: 20%;">Unit Price</th>
-            <th style="text-align: right; width: 20%;">Line Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(item, idx) in receipt.items" :key="idx">
-            <td>
-              <strong style="color: var(--text-main); font-weight: 700;">{{ item.item_desc }}</strong>
-            </td>
-            <td style="text-align: center; color: var(--text-main); font-weight: 600;">{{ item.quantity }}</td>
-            <td style="text-align: right; color: var(--text-main);">₱{{ Number(item.unit_price).toFixed(2) }}</td>
-            <td style="text-align: right; font-weight: 700; color: var(--text-main);">₱{{ Number(item.line_total).toFixed(2) }}</td>
-          </tr>
-          <tr v-if="!receipt.items || !receipt.items.length">
-            <td colspan="4" style="text-align: center; padding: 1.5rem; color: var(--text-muted);">No items recorded for this receipt.</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- Totals Breakdown -->
-      <div class="receipt-totals-container">
-        <div class="receipt-totals-box">
-          <div class="total-row">
-            <span>Subtotal:</span>
-            <span style="color: var(--text-main); font-weight: 600;">₱{{ Number(receipt.subtotal || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+      <!-- Loop over dynamically computed pages -->
+      <div 
+        v-for="page in paginatedPages" 
+        :key="page.pageIndex" 
+        class="print-page"
+        :class="{ 'first-page': page.isFirst, 'last-page': page.isLast, 'middle-page': !page.isFirst && !page.isLast }"
+      >
+        <!-- Page Content Wrapper -->
+        <div class="page-content-wrapper">
+          
+          <!-- Screen-Only Page Divider for multi-page modal preview -->
+          <div v-if="paginatedPages.length > 1 && !page.isFirst" class="page-screen-divider">
+            <span>--- Page {{ page.pageNum }} of {{ page.totalPages }} ---</span>
           </div>
-          <div class="total-row" v-if="receipt.discount > 0">
-            <span>Discount:</span>
-            <span style="color: var(--red-600); font-weight: 600;">-₱{{ Number(receipt.discount).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
-          </div>
-          <div class="total-row" v-if="receipt.tax > 0">
-            <span>VAT / Tax:</span>
-            <span style="color: var(--text-main); font-weight: 600;">₱{{ Number(receipt.tax).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
-          </div>
-          <div class="total-row grand-total">
-            <span>GRAND TOTAL:</span>
-            <span style="color: var(--text-main); font-weight: 800;">₱{{ Number(receipt.grand_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
-          </div>
-        </div>
-      </div>
 
-      <!-- Bottom Footer (Barcode & Signatures) -->
-      <div class="receipt-bottom-footer">
-        <!-- Barcode / Reference -->
-        <div class="receipt-barcode">
-          <div class="barcode-lines">
-            <div class="barcode-bar" style="width: 2px;"></div>
-            <div class="barcode-bar" style="width: 4px;"></div>
-            <div class="barcode-bar" style="width: 1px;"></div>
-            <div class="barcode-bar" style="width: 3px;"></div>
-            <div class="barcode-bar" style="width: 5px;"></div>
-            <div class="barcode-bar" style="width: 2px;"></div>
-            <div class="barcode-bar" style="width: 4px;"></div>
-            <div class="barcode-bar" style="width: 1px;"></div>
-            <div class="barcode-bar" style="width: 3px;"></div>
+          <!-- Page 1 Only: Company Official Header -->
+          <div v-if="page.isFirst" class="receipt-header">
+            <h1 class="company-title">KIEL BIEL CONSUMER GOODS TRADING</h1>
+            <p class="company-subtitle">Brgy.42 Rawis, Legazpi City</p>
+            <p class="company-subtitle">Cp# 09985317204</p>
+            <div class="official-invoice-tag">OFFICIAL RECEIPT / INVOICE</div>
           </div>
-          <div class="barcode-text">*{{ receipt.receipt_no }}*</div>
-        </div>
 
-        <!-- Official Footer Signatures -->
-        <div class="receipt-footer">
-          <div class="signature-section">
-            <div class="sig-box">
-              <div class="sig-line"></div>
-              <span>Authorized Signature</span>
+          <!-- Page 1 Only: Receipt Metadata Grid -->
+          <div v-if="page.isFirst" class="receipt-meta-grid">
+            <div class="meta-column">
+              <div><span class="meta-label">Customer Name:</span> <strong class="meta-val">{{ receipt.customer_name || 'Walk-in Customer' }}</strong></div>
+              <div><span class="meta-label">Customer Address:</span> <span class="meta-val">{{ customerAddress }}</span></div>
+              <div><span class="meta-label">Cashier:</span> <span class="meta-val">{{ receipt.cashier_name }}</span></div>
+              <div><span class="meta-label">Payment Method:</span> <span class="meta-val">{{ receipt.payment_method }}</span></div>
             </div>
-            <div class="sig-box">
-              <div class="sig-line"></div>
-              <span>Received By (Customer Signature)</span>
+            <div class="meta-column text-right">
+              <div><span class="meta-label">Receipt No:</span> <strong class="meta-val text-primary">{{ receipt.receipt_no }}</strong></div>
+              <div><span class="meta-label">Invoice Ref:</span> <span class="meta-val">{{ receipt.invoice_no }}</span></div>
+              <div><span class="meta-label">Date & Time:</span> <span class="meta-val">{{ receipt.created_at }}</span></div>
             </div>
           </div>
+
+          <!-- Itemized Table for this page -->
+          <table class="receipt-items-table" :class="{ 'no-header-table': !page.isFirst }">
+            <!-- Table Headings ONLY on Page 1 -->
+            <thead v-if="page.isFirst">
+              <tr>
+                <th style="width: 45%; text-align: left;">Item Description</th>
+                <th style="width: 15%; text-align: center;">Qty</th>
+                <th style="width: 20%; text-align: right;">Unit Price</th>
+                <th style="width: 20%; text-align: right;">Line Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, idx) in page.items" :key="idx">
+                <td style="width: 45%; text-align: left;">
+                  <strong class="item-name">{{ item.item_desc }}</strong>
+                </td>
+                <td style="width: 15%; text-align: center;" class="item-qty">{{ item.quantity }}</td>
+                <td style="width: 20%; text-align: right;" class="item-price">₱{{ Number(item.unit_price).toFixed(2) }}</td>
+                <td style="width: 20%; text-align: right;" class="item-total">₱{{ Number(item.line_total).toFixed(2) }}</td>
+              </tr>
+              <tr v-if="!page.items || !page.items.length">
+                <td colspan="4" style="text-align: center; padding: 1.5rem; color: var(--text-muted);">No items recorded for this receipt.</td>
+              </tr>
+            </tbody>
+          </table>
+
         </div>
+
+        <!-- Final Page Only: Totals and Signatures Pinned to Bottom -->
+        <div v-if="page.isLast" class="page-bottom-anchor">
+          <!-- Totals Breakdown -->
+          <div class="receipt-totals-container">
+            <div class="receipt-totals-box">
+              <div class="total-row">
+                <span>Subtotal:</span>
+                <span class="total-val">₱{{ Number(receipt.subtotal || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+              </div>
+              <div class="total-row" v-if="receipt.discount > 0">
+                <span>Discount:</span>
+                <span class="total-val text-discount">-₱{{ Number(receipt.discount).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+              </div>
+              <div class="total-row" v-if="receipt.tax > 0">
+                <span>VAT / Tax:</span>
+                <span class="total-val">₱{{ Number(receipt.tax).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+              </div>
+              <div class="total-row grand-total">
+                <span>GRAND TOTAL:</span>
+                <span class="grand-total-val">₱{{ Number(receipt.grand_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Official Footer Signatures (Bottom of Final Page Only) -->
+          <div class="receipt-footer">
+            <div class="signature-section">
+              <div class="sig-box">
+                <div class="sig-line"></div>
+                <span>Authorized Signature</span>
+              </div>
+              <div class="sig-box">
+                <div class="sig-line"></div>
+                <span>Received By (Customer Signature)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- Action Buttons (Hidden on Print) -->
@@ -134,18 +138,151 @@ const customerAddress = computed(() => {
   return found ? (found.address || 'Store Direct') : 'Store Direct'
 })
 
+// Dynamic Pagination Algorithm
+function estimateItemHeight(item) {
+  const desc = (item.item_desc || '').trim()
+  // Approximate character line wrap threshold for 45% description column at 14px font
+  const lines = Math.max(1, Math.ceil(desc.length / 32))
+  return 34 + (lines - 1) * 16
+}
+
+const paginatedPages = computed(() => {
+  const items = receipt.value.items || []
+  if (!items.length) {
+    return [{
+      pageIndex: 0,
+      pageNum: 1,
+      totalPages: 1,
+      isFirst: true,
+      isLast: true,
+      items: []
+    }]
+  }
+
+  // Printable page capacity units (px equivalent in print container of ~262mm)
+  const TOTAL_PAGE_CAPACITY = 940
+  const PAGE_1_HEADER_SPACE = 210 // Company Header + Meta Grid + Table <thead>
+  const TOTALS_AND_SIG_SPACE = 160 // Subtotal, Grand Total, Signatures, margins
+
+  // Case 1: All items fit comfortably on a single page
+  const singlePageItemCap = TOTAL_PAGE_CAPACITY - PAGE_1_HEADER_SPACE - TOTALS_AND_SIG_SPACE // ~570px (~16-17 items)
+  let totalAllItemsHeight = 0
+  for (const it of items) {
+    totalAllItemsHeight += estimateItemHeight(it)
+  }
+
+  if (totalAllItemsHeight <= singlePageItemCap) {
+    return [{
+      pageIndex: 0,
+      pageNum: 1,
+      totalPages: 1,
+      isFirst: true,
+      isLast: true,
+      items: items
+    }]
+  }
+
+  // Case 2: Multi-page receipt calculation
+  const pages = []
+  let currentIndex = 0
+  let pageNum = 1
+
+  // Page 1
+  const page1Capacity = TOTAL_PAGE_CAPACITY - PAGE_1_HEADER_SPACE // ~730px (~21-22 items)
+  let currentAccumulated = 0
+  const page1Items = []
+
+  while (currentIndex < items.length) {
+    const itemH = estimateItemHeight(items[currentIndex])
+    if (currentAccumulated + itemH > page1Capacity && page1Items.length > 0) {
+      break
+    }
+    page1Items.push(items[currentIndex])
+    currentAccumulated += itemH
+    currentIndex++
+  }
+
+  pages.push({
+    pageIndex: 0,
+    pageNum: 1,
+    isFirst: true,
+    isLast: false,
+    items: page1Items
+  })
+
+  // Succeeding Pages (Page 2, Page 3, ...)
+  while (currentIndex < items.length) {
+    pageNum++
+    const remainingItems = items.slice(currentIndex)
+    let remainingHeight = 0
+    for (const it of remainingItems) {
+      remainingHeight += estimateItemHeight(it)
+    }
+
+    const lastPageCapacity = TOTAL_PAGE_CAPACITY - TOTALS_AND_SIG_SPACE // ~780px (~22-23 items)
+
+    // Check if remaining items fit on this page as the LAST page
+    if (remainingHeight <= lastPageCapacity) {
+      pages.push({
+        pageIndex: pageNum - 1,
+        pageNum: pageNum,
+        isFirst: false,
+        isLast: true,
+        items: remainingItems
+      })
+      break
+    } else {
+      // Middle Page (full height capacity for items)
+      const middlePageCapacity = TOTAL_PAGE_CAPACITY // ~940px (~27-28 items)
+      let midAccumulated = 0
+      const midItems = []
+
+      while (currentIndex < items.length) {
+        const itemH = estimateItemHeight(items[currentIndex])
+        if (midAccumulated + itemH > middlePageCapacity && midItems.length > 0) {
+          break
+        }
+        midItems.push(items[currentIndex])
+        midAccumulated += itemH
+        currentIndex++
+      }
+
+      pages.push({
+        pageIndex: pageNum - 1,
+        pageNum: pageNum,
+        isFirst: false,
+        isLast: false,
+        items: midItems
+      })
+    }
+  }
+
+  // Set totalPages on all page objects
+  const total = pages.length
+  pages.forEach(p => {
+    p.totalPages = total
+    if (p.pageIndex === total - 1) {
+      p.isLast = true
+    }
+  })
+
+  return pages
+})
+
 function printReceipt() {
   window.print()
 }
 </script>
 
 <style scoped>
-/* Screen styling for receipt card modal - compact, space-efficient, highly legible */
+/* ==================================================================== */
+/* SCREEN MODAL STYLING                                                 */
+/* ==================================================================== */
 .receipt-card {
   background: var(--surface);
   border-radius: var(--radius-lg);
   padding: 1.25rem 1.75rem;
-  max-width: 640px;
+  max-width: 680px;
   width: 92%;
   max-height: 90vh;
   overflow-y: auto;
@@ -153,6 +290,27 @@ function printReceipt() {
   border: 1px solid var(--border);
   color: var(--text-main);
   box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.4);
+}
+
+.print-page {
+  display: flex;
+  flex-direction: column;
+}
+
+.page-content-wrapper {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-screen-divider {
+  border-top: 1.5px dashed var(--border);
+  margin: 1.5rem 0 1.25rem;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
 }
 
 .receipt-header {
@@ -208,6 +366,7 @@ function printReceipt() {
 
 .receipt-items-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   margin-bottom: 0.75rem;
 }
@@ -230,6 +389,29 @@ function printReceipt() {
   line-height: 1.35;
 }
 
+.item-name {
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.item-qty {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.item-price {
+  color: var(--text-main);
+}
+
+.item-total {
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.page-bottom-anchor {
+  margin-top: 0.75rem;
+}
+
 .receipt-totals-container {
   display: flex;
   justify-content: flex-end;
@@ -244,7 +426,21 @@ function printReceipt() {
   font-size: 0.75rem;
 }
 
-.total-row { display: flex; justify-content: space-between; color: var(--text-muted); }
+.total-row { 
+  display: flex; 
+  justify-content: space-between; 
+  color: var(--text-muted); 
+}
+
+.total-val {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.text-discount {
+  color: var(--red-600) !important;
+}
+
 .total-row.grand-total {
   font-size: 0.95rem;
   font-weight: 800;
@@ -254,17 +450,10 @@ function printReceipt() {
   margin-top: 0.2rem;
 }
 
-.receipt-barcode {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  margin: 0.5rem 0;
+.grand-total-val {
+  color: var(--text-main);
+  font-weight: 800;
 }
-
-.barcode-lines { display: flex; gap: 2.5px; height: 22px; align-items: center; }
-.barcode-bar { background: var(--text-main); height: 100%; }
-.barcode-text { font-family: monospace; font-size: 0.7rem; color: var(--text-muted); }
 
 .receipt-footer {
   text-align: center;
@@ -297,20 +486,23 @@ function printReceipt() {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 0mm !important;
+    margin: 16mm 18mm !important;
   }
 
   html, body {
     margin: 0 !important;
     padding: 0 !important;
     background: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   body * {
     visibility: hidden !important;
   }
 
-  #receiptModal, #receiptModal * {
+  #receiptModal,
+  #receiptModal * {
     visibility: visible !important;
     box-sizing: border-box !important;
   }
@@ -320,18 +512,15 @@ function printReceipt() {
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;
-    min-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
     background: #ffffff !important;
     backdrop-filter: none !important;
-    padding: 2.54cm 2.54cm !important;
-    margin: 0 !important;
     border: none !important;
-    border-left: none !important;
     box-shadow: none !important;
     display: block !important;
     overflow: visible !important;
     z-index: 999999 !important;
-    box-sizing: border-box !important;
   }
 
   .receipt-card {
@@ -339,21 +528,53 @@ function printReceipt() {
     width: 100% !important;
     box-shadow: none !important;
     border: none !important;
-    border-left: none !important;
     outline: none !important;
     padding: 0 !important;
-    margin: 0 auto !important;
+    margin: 0 !important;
     background: #ffffff !important;
     color: #000000 !important;
     overflow: visible !important;
+  }
+
+  .print-page {
+    width: 100% !important;
+    min-height: 262mm !important;
+    height: 262mm !important;
+    max-height: 262mm !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    page-break-after: always !important;
+    break-after: page !important;
     box-sizing: border-box !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    position: relative !important;
+  }
+
+  .print-page:last-child {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  .page-content-wrapper {
+    flex: 1 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .page-bottom-anchor {
+    margin-top: auto !important;
+    padding-top: 0.75rem !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .receipt-header {
     text-align: center !important;
     border-bottom: 2px solid #000000 !important;
-    padding-bottom: 1.25rem !important;
-    margin-bottom: 1.5rem !important;
+    padding-bottom: 1rem !important;
+    margin-bottom: 1.25rem !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
@@ -377,19 +598,19 @@ function printReceipt() {
     font-size: 8.5pt !important;
     font-weight: 800 !important;
     padding: 3px 12px !important;
-    margin-top: 8px !important;
+    margin-top: 6px !important;
     border-radius: 999px !important;
   }
 
   .receipt-meta-grid {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
-    gap: 1rem !important;
+    gap: 0.75rem 1.25rem !important;
     background: #f8fafc !important;
     border: 1px solid #cbd5e1 !important;
     color: #000000 !important;
-    padding: 1rem !important;
-    margin-bottom: 1.5rem !important;
+    padding: 0.85rem 1rem !important;
+    margin-bottom: 1.25rem !important;
     font-size: 9pt !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
@@ -400,38 +621,49 @@ function printReceipt() {
 
   .receipt-items-table {
     width: 100% !important;
+    table-layout: fixed !important;
     border-collapse: collapse !important;
-    margin-bottom: 1.5rem !important;
-    page-break-inside: auto !important;
+    margin-bottom: 0.5rem !important;
   }
 
   .receipt-items-table thead {
     display: table-header-group !important;
   }
 
-  .receipt-items-table tr {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-
   .receipt-items-table th {
     background: #e2e8f0 !important;
     color: #000000 !important;
     border-bottom: 2px solid #000000 !important;
-    padding: 0.6rem 0.75rem !important;
+    padding: 0.5rem 0.6rem !important;
     font-size: 8.5pt !important;
     text-transform: uppercase !important;
     font-weight: 700 !important;
   }
 
-  .receipt-items-table td,
-  .receipt-items-table td strong,
-  .receipt-items-table td span {
+  .receipt-items-table td {
+    padding: 0.4rem 0.6rem !important;
+    font-size: 14px !important;
     color: #000000 !important;
     font-weight: 600 !important;
     border-bottom: none !important;
-    padding: 0.45rem 0.75rem !important;
-    font-size: 14px !important;
+    line-height: 1.35 !important;
+  }
+
+  .receipt-items-table td strong,
+  .item-name {
+    color: #000000 !important;
+    font-weight: 700 !important;
+  }
+
+  .item-qty,
+  .item-price,
+  .item-total {
+    color: #000000 !important;
+  }
+
+  .receipt-items-table tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .receipt-totals-container {
@@ -443,68 +675,35 @@ function printReceipt() {
   }
 
   .receipt-totals-box {
-    width: 280px !important;
+    width: 270px !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 0.4rem !important;
-    font-size: 9pt !important;
+    gap: 0.35rem !important;
+    font-size: 9.5pt !important;
   }
 
-  .total-row span { color: #000000 !important; }
+  .total-row span,
+  .total-val { 
+    color: #000000 !important; 
+  }
+
   .total-row.grand-total {
     font-size: 12pt !important;
-    padding-top: 0.5rem !important;
+    padding-top: 0.4rem !important;
     margin-top: 0.25rem !important;
     border-top: 2px solid #000000 !important;
   }
-  .total-row.grand-total span {
+
+  .total-row.grand-total span,
+  .grand-total-val {
     color: #000000 !important;
     font-weight: 800 !important;
-    border-top: none !important;
   }
-
-  .receipt-bottom-footer {
-    position: static !important;
-    margin-top: 40px !important;
-    padding-top: 0 !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-    background: transparent !important;
-  }
-
-  .receipt-barcode {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    gap: 4px !important;
-    margin: 1rem 0 !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  .barcode-lines {
-    display: flex !important;
-    gap: 3px !important;
-    height: 28px !important;
-    align-items: center !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-  .barcode-bar {
-    background: #000000 !important;
-    background-color: #000000 !important;
-    height: 100% !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-  .barcode-text { color: #000000 !important; font-size: 8.5pt !important; font-family: monospace !important; }
 
   .receipt-footer {
     border-top: none !important;
     padding-top: 0 !important;
-    margin-top: 1rem !important;
+    margin-top: 0 !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
@@ -512,7 +711,7 @@ function printReceipt() {
   .signature-section {
     display: flex !important;
     justify-content: space-between !important;
-    margin-top: 35px !important;
+    margin-top: 1.5rem !important;
     padding-top: 0 !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
@@ -527,11 +726,12 @@ function printReceipt() {
 
   .sig-line {
     border-top: 1.5px solid #000000 !important;
-    margin-bottom: 8px !important;
+    margin-bottom: 6px !important;
   }
 
   .no-print-controls,
   .modal-footer,
+  .page-screen-divider,
   button,
   .btn {
     display: none !important;
