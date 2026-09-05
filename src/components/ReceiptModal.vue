@@ -294,7 +294,7 @@ function printReceipt() {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 0mm !important;
+    margin: 15mm 15mm 15mm 15mm !important;
   }
 
   html, body {
@@ -312,21 +312,21 @@ function printReceipt() {
   }
 
   #receiptModal {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
     width: 100% !important;
-    min-height: 100% !important;
+    min-height: auto !important;
     background: #ffffff !important;
     backdrop-filter: none !important;
-    padding: 15mm 20mm !important;
+    padding: 0 !important;
     margin: 0 !important;
     border: none !important;
     border-left: none !important;
     box-shadow: none !important;
     display: block !important;
     overflow: visible !important;
-    z-index: 999999 !important;
+    z-index: auto !important;
   }
 
   .receipt-card {
