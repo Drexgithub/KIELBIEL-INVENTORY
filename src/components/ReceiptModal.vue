@@ -486,7 +486,7 @@ function printReceipt() {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 2.54cm 2.54cm 2.54cm 2.54cm !important;
+    margin: 0mm !important;
   }
 
   html, body {
@@ -538,16 +538,16 @@ function printReceipt() {
 
   .print-page {
     width: 100% !important;
-    min-height: 246mm !important;
-    height: 246mm !important;
-    max-height: 246mm !important;
+    min-height: 297mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: flex-start !important;
     page-break-after: always !important;
     break-after: page !important;
     box-sizing: border-box !important;
-    padding: 0 !important;
+    padding: 2.54cm 2.54cm 2.54cm 2.54cm !important;
     margin: 0 !important;
     position: relative !important;
   }
