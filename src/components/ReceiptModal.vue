@@ -137,156 +137,165 @@ function printReceipt() {
 </script>
 
 <style scoped>
-/* Screen styling for receipt card modal - adapts dynamically to dark/light mode */
+/* Screen styling for receipt card modal - compact, space-efficient, highly legible */
 .receipt-card {
   background: var(--surface);
   border-radius: var(--radius-lg);
-  padding: 2.5rem;
-  max-width: 680px;
-  width: 90%;
+  padding: 1.25rem 1.75rem;
+  max-width: 640px;
+  width: 92%;
+  max-height: 90vh;
+  overflow-y: auto;
   margin: auto;
   border: 1px solid var(--border);
   color: var(--text-main);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.4);
 }
 
 .receipt-header {
   text-align: center;
-  border-bottom: 2px solid var(--border);
-  padding-bottom: 1.25rem;
-  margin-bottom: 1.5rem;
+  border-bottom: 1.5px solid var(--border);
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.75rem;
 }
 
 .company-title {
-  font-size: 1.35rem;
+  font-size: 1.15rem;
   font-weight: 800;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
   color: var(--text-main);
+  margin: 0;
+  line-height: 1.2;
 }
 
 .company-subtitle {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
-  margin-top: 2px;
+  margin-top: 1px;
+  line-height: 1.3;
 }
 
 .official-invoice-tag {
   display: inline-block;
-  margin-top: 0.75rem;
-  padding: 0.35rem 1rem;
+  margin-top: 0.4rem;
+  padding: 0.2rem 0.75rem;
   background: var(--primary-light);
   color: var(--primary);
   font-weight: 800;
-  font-size: 0.85rem;
+  font-size: 0.72rem;
   border-radius: 999px;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
 }
 
 .receipt-meta-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  font-size: 0.875rem;
-  padding: 1rem;
+  gap: 0.5rem 1rem;
+  font-size: 0.75rem;
+  padding: 0.6rem 0.85rem;
   background: var(--input-bg);
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.45;
 }
 
-.meta-label { color: var(--text-muted); font-size: 0.8rem; }
-.meta-val { color: var(--text-main); }
+.meta-label { color: var(--text-muted); font-size: 0.72rem; }
+.meta-val { color: var(--text-main); font-size: 0.75rem; }
 
 .receipt-items-table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .receipt-items-table th {
-  padding: 0.75rem 1rem;
+  padding: 0.4rem 0.5rem;
   background: var(--bg-main);
-  border-bottom: 2px solid var(--border);
-  font-size: 0.75rem;
+  border-bottom: 1.5px solid var(--border);
+  font-size: 0.68rem;
   text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--text-muted);
+  font-weight: 700;
 }
 
 .receipt-items-table td {
-  padding: 0.875rem 1rem;
+  padding: 0.35rem 0.5rem;
   border-bottom: 1px solid var(--border);
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: var(--text-main);
+  line-height: 1.3;
 }
 
 .receipt-totals-container {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.6rem;
 }
 
 .receipt-totals-box {
-  width: 280px;
+  width: 250px;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  font-size: 0.9rem;
+  gap: 0.25rem;
+  font-size: 0.75rem;
 }
 
 .total-row { display: flex; justify-content: space-between; color: var(--text-muted); }
 .total-row.grand-total {
-  font-size: 1.2rem;
+  font-size: 0.95rem;
   font-weight: 800;
   color: var(--text-main);
-  border-top: 2px dashed var(--border);
-  padding-top: 0.75rem;
-  margin-top: 0.25rem;
+  border-top: 1.5px dashed var(--border);
+  padding-top: 0.4rem;
+  margin-top: 0.2rem;
 }
 
 .receipt-barcode {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  margin: 1.5rem 0;
+  gap: 2px;
+  margin: 0.5rem 0;
 }
 
-.barcode-lines { display: flex; gap: 3px; height: 32px; align-items: center; }
+.barcode-lines { display: flex; gap: 2.5px; height: 22px; align-items: center; }
 .barcode-bar { background: var(--text-main); height: 100%; }
-.barcode-text { font-family: monospace; font-size: 0.8rem; color: var(--text-muted); }
+.barcode-text { font-family: monospace; font-size: 0.7rem; color: var(--text-muted); }
 
 .receipt-footer {
   text-align: center;
   border-top: none;
   padding-top: 0;
-  margin-top: 2rem;
+  margin-top: 0.5rem;
 }
 
 .signature-section {
   display: flex;
   justify-content: space-between;
-  margin-top: 40px;
+  margin-top: 18px;
 }
 
 .sig-box {
   width: 42%;
   text-align: center;
-  font-size: 0.85rem;
+  font-size: 0.72rem;
   color: var(--text-main);
 }
 
 .sig-line {
-  border-top: 1.5px solid var(--text-main);
-  margin-bottom: 6px;
+  border-top: 1.2px solid var(--text-main);
+  margin-bottom: 4px;
 }
 
 /* ==================================================================== */
-/* EXACT FULL A4 PRINT STYLES (Always Solid Black Text on Paper)        */
+/* EXACT FULL A4 PRINT STYLES (Solid Black Text, Compact Layout)        */
 /* ==================================================================== */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 0mm !important;
+    margin: 8mm 10mm !important;
   }
 
   html, body {
@@ -311,7 +320,7 @@ function printReceipt() {
     min-height: 100% !important;
     background: #ffffff !important;
     backdrop-filter: none !important;
-    padding: 15mm 20mm !important;
+    padding: 0 !important;
     margin: 0 !important;
     border: none !important;
     border-left: none !important;
@@ -332,71 +341,113 @@ function printReceipt() {
     margin: 0 !important;
     background: #ffffff !important;
     color: #000000 !important;
+    overflow: visible !important;
   }
 
-  .company-title { color: #000000 !important; font-size: 18pt !important; }
-  .company-subtitle { color: #333333 !important; font-size: 9pt !important; }
+  .receipt-header {
+    border-bottom: 1.5px solid #000000 !important;
+    padding-bottom: 4px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .company-title { color: #000000 !important; font-size: 13pt !important; }
+  .company-subtitle { color: #333333 !important; font-size: 7.5pt !important; }
   .official-invoice-tag {
     background: #f1f5f9 !important;
     color: #000000 !important;
     border: 1px solid #000000 !important;
+    font-size: 7.5pt !important;
+    padding: 1px 6px !important;
+    margin-top: 3px !important;
   }
 
   .receipt-meta-grid {
     background: #f8fafc !important;
     border: 1px solid #cbd5e1 !important;
     color: #000000 !important;
+    padding: 4px 8px !important;
+    margin-bottom: 6px !important;
+    font-size: 7.5pt !important;
   }
 
-  .meta-label { color: #475569 !important; }
-  .meta-val { color: #000000 !important; }
+  .meta-label { color: #475569 !important; font-size: 7pt !important; }
+  .meta-val { color: #000000 !important; font-size: 7.5pt !important; }
+
+  .receipt-items-table {
+    margin-bottom: 6px !important;
+  }
 
   .receipt-items-table th {
     background: #e2e8f0 !important;
     color: #000000 !important;
-    border-bottom: 2px solid #000000 !important;
+    border-bottom: 1.5px solid #000000 !important;
+    padding: 3px 5px !important;
+    font-size: 7pt !important;
   }
 
   .receipt-items-table td,
   .receipt-items-table td strong,
   .receipt-items-table td span {
     color: #000000 !important;
-    font-weight: 700 !important;
-    border-bottom: 1px solid #cbd5e1 !important;
+    font-weight: 600 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding: 2.5px 5px !important;
+    font-size: 7.5pt !important;
+  }
+
+  .receipt-totals-container {
+    margin-bottom: 6px !important;
+  }
+
+  .receipt-totals-box {
+    width: 220px !important;
+    font-size: 7.5pt !important;
+    gap: 2px !important;
   }
 
   .total-row span { color: #000000 !important; }
+  .total-row.grand-total {
+    font-size: 9.5pt !important;
+    padding-top: 3px !important;
+    margin-top: 2px !important;
+  }
   .total-row.grand-total span {
     color: #000000 !important;
-    border-top: 2px solid #000000 !important;
+    border-top: 1.5px solid #000000 !important;
   }
 
+  .receipt-barcode {
+    margin: 4px 0 !important;
+    gap: 1px !important;
+  }
+
+  .barcode-lines { height: 18px !important; }
   .barcode-bar { background: #000000 !important; }
-  .barcode-text { color: #000000 !important; }
+  .barcode-text { color: #000000 !important; font-size: 6.5pt !important; }
 
   .receipt-footer {
     border-top: none !important;
     padding-top: 0 !important;
-    margin-top: 40px !important;
+    margin-top: 6px !important;
   }
 
   .signature-section {
     display: flex !important;
     justify-content: space-between !important;
-    margin-top: 40px !important;
+    margin-top: 15px !important;
     padding-top: 0 !important;
   }
 
   .sig-box {
     width: 42% !important;
     text-align: center !important;
-    font-size: 10pt !important;
+    font-size: 7.5pt !important;
     color: #000000 !important;
   }
 
   .sig-line {
-    border-top: 1.5px solid #000000 !important;
-    margin-bottom: 8px !important;
+    border-top: 1.2px solid #000000 !important;
+    margin-bottom: 4px !important;
   }
 
   .no-print-controls,
