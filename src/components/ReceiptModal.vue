@@ -72,32 +72,35 @@
         </div>
       </div>
 
-      <!-- Barcode / Reference -->
-      <div class="receipt-barcode">
-        <div class="barcode-lines">
-          <div class="barcode-bar" style="width: 2px;"></div>
-          <div class="barcode-bar" style="width: 4px;"></div>
-          <div class="barcode-bar" style="width: 1px;"></div>
-          <div class="barcode-bar" style="width: 3px;"></div>
-          <div class="barcode-bar" style="width: 5px;"></div>
-          <div class="barcode-bar" style="width: 2px;"></div>
-          <div class="barcode-bar" style="width: 4px;"></div>
-          <div class="barcode-bar" style="width: 1px;"></div>
-          <div class="barcode-bar" style="width: 3px;"></div>
-        </div>
-        <div class="barcode-text">*{{ receipt.receipt_no }}*</div>
-      </div>
-
-      <!-- Official Footer Signatures -->
-      <div class="receipt-footer">
-        <div class="signature-section">
-          <div class="sig-box">
-            <div class="sig-line"></div>
-            <span>Authorized Signature</span>
+      <!-- Bottom Footer (Barcode & Signatures) -->
+      <div class="receipt-bottom-footer">
+        <!-- Barcode / Reference -->
+        <div class="receipt-barcode">
+          <div class="barcode-lines">
+            <div class="barcode-bar" style="width: 2px;"></div>
+            <div class="barcode-bar" style="width: 4px;"></div>
+            <div class="barcode-bar" style="width: 1px;"></div>
+            <div class="barcode-bar" style="width: 3px;"></div>
+            <div class="barcode-bar" style="width: 5px;"></div>
+            <div class="barcode-bar" style="width: 2px;"></div>
+            <div class="barcode-bar" style="width: 4px;"></div>
+            <div class="barcode-bar" style="width: 1px;"></div>
+            <div class="barcode-bar" style="width: 3px;"></div>
           </div>
-          <div class="sig-box">
-            <div class="sig-line"></div>
-            <span>Received By (Customer Signature)</span>
+          <div class="barcode-text">*{{ receipt.receipt_no }}*</div>
+        </div>
+
+        <!-- Official Footer Signatures -->
+        <div class="receipt-footer">
+          <div class="signature-section">
+            <div class="sig-box">
+              <div class="sig-line"></div>
+              <span>Authorized Signature</span>
+            </div>
+            <div class="sig-box">
+              <div class="sig-line"></div>
+              <span>Received By (Customer Signature)</span>
+            </div>
           </div>
         </div>
       </div>
@@ -334,7 +337,9 @@ function printReceipt() {
   .receipt-card {
     max-width: 100% !important;
     width: 100% !important;
-    max-height: none !important;
+    min-height: calc(297mm - 5.08cm) !important;
+    display: flex !important;
+    flex-direction: column !important;
     box-shadow: none !important;
     border: none !important;
     border-left: none !important;
@@ -453,11 +458,19 @@ function printReceipt() {
     font-size: 12pt !important;
     padding-top: 0.5rem !important;
     margin-top: 0.25rem !important;
+    border-top: 2px solid #000000 !important;
   }
   .total-row.grand-total span {
     color: #000000 !important;
     font-weight: 800 !important;
-    border-top: 2px solid #000000 !important;
+    border-top: none !important;
+  }
+
+  .receipt-bottom-footer {
+    margin-top: auto !important;
+    padding-top: 2rem !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .receipt-barcode {
@@ -465,19 +478,34 @@ function printReceipt() {
     flex-direction: column !important;
     align-items: center !important;
     gap: 4px !important;
-    margin: 1.5rem 0 !important;
+    margin: 1rem 0 !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
-  .barcode-lines { display: flex !important; gap: 3px !important; height: 28px !important; align-items: center !important; }
-  .barcode-bar { background: #000000 !important; height: 100% !important; }
+  .barcode-lines {
+    display: flex !important;
+    gap: 3px !important;
+    height: 28px !important;
+    align-items: center !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .barcode-bar {
+    background: #000000 !important;
+    background-color: #000000 !important;
+    height: 100% !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
   .barcode-text { color: #000000 !important; font-size: 8.5pt !important; font-family: monospace !important; }
 
   .receipt-footer {
     border-top: none !important;
     padding-top: 0 !important;
-    margin-top: 2rem !important;
+    margin-top: 1rem !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
@@ -485,7 +513,7 @@ function printReceipt() {
   .signature-section {
     display: flex !important;
     justify-content: space-between !important;
-    margin-top: 40px !important;
+    margin-top: 30px !important;
     padding-top: 0 !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
