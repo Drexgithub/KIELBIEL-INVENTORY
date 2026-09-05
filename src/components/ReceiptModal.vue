@@ -159,13 +159,13 @@ const paginatedPages = computed(() => {
     }]
   }
 
-  // Printable page capacity units (px equivalent in print container with 2.54cm margins, ~246mm)
-  const TOTAL_PAGE_CAPACITY = 880
+  // Printable page capacity units (px equivalent in print container with 2.54cm margins on all sides)
+  const TOTAL_PAGE_CAPACITY = 850
   const PAGE_1_HEADER_SPACE = 210 // Company Header + Meta Grid + Table <thead>
   const TOTALS_AND_SIG_SPACE = 160 // Subtotal, Grand Total, Signatures, margins
 
   // Case 1: All items fit comfortably on a single page
-  const singlePageItemCap = TOTAL_PAGE_CAPACITY - PAGE_1_HEADER_SPACE - TOTALS_AND_SIG_SPACE // ~570px (~16-17 items)
+  const singlePageItemCap = TOTAL_PAGE_CAPACITY - PAGE_1_HEADER_SPACE - TOTALS_AND_SIG_SPACE // ~480px (~14 items)
   let totalAllItemsHeight = 0
   for (const it of items) {
     totalAllItemsHeight += estimateItemHeight(it)
@@ -188,7 +188,7 @@ const paginatedPages = computed(() => {
   let pageNum = 1
 
   // Page 1
-  const page1Capacity = TOTAL_PAGE_CAPACITY - PAGE_1_HEADER_SPACE // ~730px (~21-22 items)
+  const page1Capacity = TOTAL_PAGE_CAPACITY - PAGE_1_HEADER_SPACE // ~640px (~18-19 items)
   let currentAccumulated = 0
   const page1Items = []
 
@@ -219,7 +219,7 @@ const paginatedPages = computed(() => {
       remainingHeight += estimateItemHeight(it)
     }
 
-    const lastPageCapacity = TOTAL_PAGE_CAPACITY - TOTALS_AND_SIG_SPACE // ~780px (~22-23 items)
+    const lastPageCapacity = TOTAL_PAGE_CAPACITY - TOTALS_AND_SIG_SPACE // ~690px (~20 items)
 
     // Check if remaining items fit on this page as the LAST page
     if (remainingHeight <= lastPageCapacity) {
@@ -233,7 +233,7 @@ const paginatedPages = computed(() => {
       break
     } else {
       // Middle Page (full height capacity for items)
-      const middlePageCapacity = TOTAL_PAGE_CAPACITY // ~940px (~27-28 items)
+      const middlePageCapacity = TOTAL_PAGE_CAPACITY // ~850px (~24-25 items)
       let midAccumulated = 0
       const midItems = []
 
@@ -486,7 +486,7 @@ function printReceipt() {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 2.54cm !important;
+    margin: 2.54cm 2.54cm 2.54cm 2.54cm !important;
   }
 
   html, body {
