@@ -222,9 +222,9 @@ function printReceipt() {
 
 .receipt-items-table td {
   padding: 0.35rem 0.5rem;
-  font-size: 0.75rem;
+  font-size: 14px;
   color: var(--text-main);
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 .receipt-totals-container {
@@ -294,7 +294,10 @@ function printReceipt() {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 0mm !important;
+    margin-top: 15mm !important;
+    margin-bottom: 15mm !important;
+    margin-left: 0mm !important;
+    margin-right: 0mm !important;
   }
 
   html, body {
@@ -319,7 +322,7 @@ function printReceipt() {
     min-height: 100% !important;
     background: #ffffff !important;
     backdrop-filter: none !important;
-    padding: 15mm 20mm !important;
+    padding: 5mm 20mm 15mm 20mm !important;
     margin: 0 !important;
     border: none !important;
     border-left: none !important;
@@ -425,8 +428,8 @@ function printReceipt() {
     color: #000000 !important;
     font-weight: 600 !important;
     border-bottom: none !important;
-    padding: 0.5rem 0.75rem !important;
-    font-size: 9pt !important;
+    padding: 0.45rem 0.75rem !important;
+    font-size: 14px !important;
   }
 
   .receipt-totals-container {
