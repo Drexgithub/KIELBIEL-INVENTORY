@@ -290,12 +290,12 @@ function printReceipt() {
 }
 
 /* ==================================================================== */
-/* EXACT FULL A4 PRINT STYLES (Solid Black Text, Compact Layout)        */
+/* EXACT FULL A4 PRINT STYLES (Clean Multi-Page Overflow Support)       */
 /* ==================================================================== */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm 10mm !important;
+    margin: 15mm 15mm !important;
   }
 
   html, body {
@@ -333,6 +333,7 @@ function printReceipt() {
   .receipt-card {
     max-width: 100% !important;
     width: 100% !important;
+    max-height: none !important;
     box-shadow: none !important;
     border: none !important;
     border-left: none !important;
@@ -345,44 +346,78 @@ function printReceipt() {
   }
 
   .receipt-header {
-    border-bottom: 1.5px solid #000000 !important;
-    padding-bottom: 4px !important;
-    margin-bottom: 6px !important;
+    text-align: center !important;
+    border-bottom: 2px solid #000000 !important;
+    padding-bottom: 1.25rem !important;
+    margin-bottom: 1.5rem !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
-  .company-title { color: #000000 !important; font-size: 13pt !important; }
-  .company-subtitle { color: #333333 !important; font-size: 7.5pt !important; }
+  .company-title {
+    color: #000000 !important;
+    font-size: 18pt !important;
+    font-weight: 800 !important;
+  }
+
+  .company-subtitle {
+    color: #333333 !important;
+    font-size: 9pt !important;
+  }
+
   .official-invoice-tag {
+    display: inline-block !important;
     background: #f1f5f9 !important;
     color: #000000 !important;
     border: 1px solid #000000 !important;
-    font-size: 7.5pt !important;
-    padding: 1px 6px !important;
-    margin-top: 3px !important;
+    font-size: 8.5pt !important;
+    font-weight: 800 !important;
+    padding: 3px 12px !important;
+    margin-top: 8px !important;
+    border-radius: 999px !important;
   }
 
   .receipt-meta-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 1rem !important;
     background: #f8fafc !important;
     border: 1px solid #cbd5e1 !important;
     color: #000000 !important;
-    padding: 4px 8px !important;
-    margin-bottom: 6px !important;
-    font-size: 7.5pt !important;
+    padding: 1rem !important;
+    margin-bottom: 1.5rem !important;
+    font-size: 9pt !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
-  .meta-label { color: #475569 !important; font-size: 7pt !important; }
-  .meta-val { color: #000000 !important; font-size: 7.5pt !important; }
+  .meta-label { color: #475569 !important; font-size: 8.5pt !important; }
+  .meta-val { color: #000000 !important; font-size: 9pt !important; }
 
   .receipt-items-table {
-    margin-bottom: 6px !important;
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-bottom: 1.5rem !important;
+    page-break-inside: auto !important;
+  }
+
+  .receipt-items-table thead {
+    display: table-header-group !important;
+  }
+
+  .receipt-items-table tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .receipt-items-table th {
     background: #e2e8f0 !important;
     color: #000000 !important;
-    border-bottom: 1.5px solid #000000 !important;
-    padding: 3px 5px !important;
-    font-size: 7pt !important;
+    border-bottom: 2px solid #000000 !important;
+    padding: 0.6rem 0.75rem !important;
+    font-size: 8.5pt !important;
+    text-transform: uppercase !important;
+    font-weight: 700 !important;
   }
 
   .receipt-items-table td,
@@ -390,64 +425,80 @@ function printReceipt() {
   .receipt-items-table td span {
     color: #000000 !important;
     font-weight: 600 !important;
-    border-bottom: 1px solid #e2e8f0 !important;
-    padding: 2.5px 5px !important;
-    font-size: 7.5pt !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+    padding: 0.6rem 0.75rem !important;
+    font-size: 9pt !important;
   }
 
   .receipt-totals-container {
-    margin-bottom: 6px !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    margin-bottom: 1.5rem !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .receipt-totals-box {
-    width: 220px !important;
-    font-size: 7.5pt !important;
-    gap: 2px !important;
+    width: 280px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.4rem !important;
+    font-size: 9pt !important;
   }
 
   .total-row span { color: #000000 !important; }
   .total-row.grand-total {
-    font-size: 9.5pt !important;
-    padding-top: 3px !important;
-    margin-top: 2px !important;
+    font-size: 12pt !important;
+    padding-top: 0.5rem !important;
+    margin-top: 0.25rem !important;
   }
   .total-row.grand-total span {
     color: #000000 !important;
-    border-top: 1.5px solid #000000 !important;
+    font-weight: 800 !important;
+    border-top: 2px solid #000000 !important;
   }
 
   .receipt-barcode {
-    margin: 4px 0 !important;
-    gap: 1px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin: 1.5rem 0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
-  .barcode-lines { height: 18px !important; }
-  .barcode-bar { background: #000000 !important; }
-  .barcode-text { color: #000000 !important; font-size: 6.5pt !important; }
+  .barcode-lines { display: flex !important; gap: 3px !important; height: 28px !important; align-items: center !important; }
+  .barcode-bar { background: #000000 !important; height: 100% !important; }
+  .barcode-text { color: #000000 !important; font-size: 8.5pt !important; font-family: monospace !important; }
 
   .receipt-footer {
     border-top: none !important;
     padding-top: 0 !important;
-    margin-top: 6px !important;
+    margin-top: 2rem !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .signature-section {
     display: flex !important;
     justify-content: space-between !important;
-    margin-top: 15px !important;
+    margin-top: 40px !important;
     padding-top: 0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .sig-box {
     width: 42% !important;
     text-align: center !important;
-    font-size: 7.5pt !important;
+    font-size: 9.5pt !important;
     color: #000000 !important;
   }
 
   .sig-line {
-    border-top: 1.2px solid #000000 !important;
-    margin-bottom: 4px !important;
+    border-top: 1.5px solid #000000 !important;
+    margin-bottom: 8px !important;
   }
 
   .no-print-controls,
