@@ -294,10 +294,10 @@ function printReceipt() {
 @media print {
   @page {
     size: A4 portrait;
-    margin-top: 15mm !important;
-    margin-bottom: 15mm !important;
-    margin-left: 0mm !important;
-    margin-right: 0mm !important;
+    margin-top: 2.54cm !important;
+    margin-bottom: 2.54cm !important;
+    margin-left: 2.54cm !important;
+    margin-right: 2.54cm !important;
   }
 
   html, body {
@@ -322,7 +322,7 @@ function printReceipt() {
     min-height: 100% !important;
     background: #ffffff !important;
     backdrop-filter: none !important;
-    padding: 5mm 20mm 15mm 20mm !important;
+    padding: 0 !important;
     margin: 0 !important;
     border: none !important;
     border-left: none !important;
