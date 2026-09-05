@@ -669,7 +669,7 @@ function printReceipt() {
   .receipt-totals-container {
     display: flex !important;
     justify-content: flex-end !important;
-    margin-bottom: 1.5rem !important;
+    margin-bottom: 0.5rem !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
@@ -711,14 +711,14 @@ function printReceipt() {
   .signature-section {
     display: flex !important;
     justify-content: space-between !important;
-    margin-top: 1.5rem !important;
-    padding-top: 0 !important;
+    margin-top: 2.5rem !important;
+    padding-top: 1rem !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
   .sig-box {
-    width: 42% !important;
+    width: 44% !important;
     text-align: center !important;
     font-size: 9.5pt !important;
     color: #000000 !important;
