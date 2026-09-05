@@ -337,14 +337,11 @@ function printReceipt() {
   .receipt-card {
     max-width: 100% !important;
     width: 100% !important;
-    min-height: calc(297mm - 5.08cm) !important;
-    display: flex !important;
-    flex-direction: column !important;
     box-shadow: none !important;
     border: none !important;
     border-left: none !important;
     outline: none !important;
-    padding: 0 !important;
+    padding: 0 0 100px 0 !important;
     margin: 0 auto !important;
     background: #ffffff !important;
     color: #000000 !important;
@@ -467,10 +464,15 @@ function printReceipt() {
   }
 
   .receipt-bottom-footer {
-    margin-top: auto !important;
-    padding-top: 2rem !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
+    position: fixed !important;
+    bottom: 2.54cm !important;
+    left: 2.54cm !important;
+    right: 2.54cm !important;
+    width: calc(100% - 5.08cm) !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    z-index: 99999 !important;
   }
 
   .receipt-barcode {
@@ -478,9 +480,7 @@ function printReceipt() {
     flex-direction: column !important;
     align-items: center !important;
     gap: 4px !important;
-    margin: 1rem 0 !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
+    margin: 0.5rem 0 0 0 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -488,7 +488,7 @@ function printReceipt() {
   .barcode-lines {
     display: flex !important;
     gap: 3px !important;
-    height: 28px !important;
+    height: 24px !important;
     align-items: center !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -505,18 +505,14 @@ function printReceipt() {
   .receipt-footer {
     border-top: none !important;
     padding-top: 0 !important;
-    margin-top: 1rem !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
+    margin-top: 0.5rem !important;
   }
 
   .signature-section {
     display: flex !important;
     justify-content: space-between !important;
-    margin-top: 30px !important;
+    margin-top: 20px !important;
     padding-top: 0 !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
   }
 
   .sig-box {
