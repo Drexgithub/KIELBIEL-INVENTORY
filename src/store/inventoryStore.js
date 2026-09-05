@@ -310,8 +310,30 @@ export const store = reactive({
   toggleSidebar() {
     this.sidebarCollapsed = !this.sidebarCollapsed
   },
-  openReceipt(receipt) {
+  async openReceipt(receipt) {
+    if (!receipt) return
     this.activeReceiptModal = receipt
+
+    // If receipt has no loaded items yet, fetch directly from Supabase as a fallback
+    if ((!receipt.items || receipt.items.length === 0) && supabase) {
+      try {
+        const { data: items, error } = await supabase
+          .from('receipt_items')
+          .select('*')
+          .eq('receipt_no', receipt.receipt_no)
+        if (!error && items && items.length > 0) {
+          receipt.items = items.map(i => ({
+            item_desc: i.item_desc,
+            quantity: Number(i.quantity),
+            unit_price: Number(i.unit_price),
+            line_total: Number(i.line_total)
+          }))
+          this.activeReceiptModal = { ...receipt }
+        }
+      } catch (err) {
+        console.error('Error fetching line items for receipt:', err)
+      }
+    }
   },
   closeReceipt() {
     this.activeReceiptModal = null
@@ -346,13 +368,15 @@ export const store = reactive({
         })
       }
 
-      // 2. Fetch Receipts & Receipt Items
-      const { data: recs, error: recErr } = await supabase.from('receipts').select('*').order('created_at', { ascending: false })
-      const { data: items, error: itemErr } = await supabase.from('receipt_items').select('*')
+      // 2. Fetch Receipts & Receipt Items (relational join so receipt items are never capped by the 1000-row limit)
+      const { data: recs, error: recErr } = await supabase
+        .from('receipts')
+        .select('*, receipt_items(*)')
+        .order('created_at', { ascending: false })
 
       if (!recErr && recs) {
         this.receipts = recs.map(r => {
-          const receiptItems = (items || []).filter(i => i.receipt_no === r.receipt_no)
+          const receiptItems = r.receipt_items || []
           return {
             receipt_no: r.receipt_no,
             invoice_no: r.invoice_no,
