@@ -294,10 +294,7 @@ function printReceipt() {
 @media print {
   @page {
     size: A4 portrait;
-    margin-top: 2.54cm !important;
-    margin-bottom: 2.54cm !important;
-    margin-left: 2.54cm !important;
-    margin-right: 2.54cm !important;
+    margin: 0mm !important;
   }
 
   html, body {
@@ -312,6 +309,7 @@ function printReceipt() {
 
   #receiptModal, #receiptModal * {
     visibility: visible !important;
+    box-sizing: border-box !important;
   }
 
   #receiptModal {
@@ -322,7 +320,7 @@ function printReceipt() {
     min-height: 100% !important;
     background: #ffffff !important;
     backdrop-filter: none !important;
-    padding: 0 !important;
+    padding: 2.54cm 2.54cm !important;
     margin: 0 !important;
     border: none !important;
     border-left: none !important;
@@ -330,6 +328,7 @@ function printReceipt() {
     display: block !important;
     overflow: visible !important;
     z-index: 999999 !important;
+    box-sizing: border-box !important;
   }
 
   .receipt-card {
@@ -341,10 +340,11 @@ function printReceipt() {
     border-left: none !important;
     outline: none !important;
     padding: 0 !important;
-    margin: 0 !important;
+    margin: 0 auto !important;
     background: #ffffff !important;
     color: #000000 !important;
     overflow: visible !important;
+    box-sizing: border-box !important;
   }
 
   .receipt-header {
