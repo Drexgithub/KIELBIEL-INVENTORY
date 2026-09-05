@@ -294,15 +294,13 @@ function printReceipt() {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 15mm 15mm !important;
+    margin: 0mm !important;
   }
 
   html, body {
     margin: 0 !important;
     padding: 0 !important;
     background: #ffffff !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
   }
 
   body * {
@@ -314,31 +312,33 @@ function printReceipt() {
   }
 
   #receiptModal {
-    position: static !important;
-    left: auto !important;
-    top: auto !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
     width: 100% !important;
-    min-height: auto !important;
-    background: transparent !important;
+    min-height: 100% !important;
+    background: #ffffff !important;
     backdrop-filter: none !important;
-    padding: 0 !important;
+    padding: 15mm 20mm !important;
     margin: 0 !important;
     border: none !important;
+    border-left: none !important;
     box-shadow: none !important;
     display: block !important;
     overflow: visible !important;
-    z-index: auto !important;
+    z-index: 999999 !important;
   }
 
   .receipt-card {
-    max-width: 680px !important;
+    max-width: 100% !important;
     width: 100% !important;
     max-height: none !important;
     box-shadow: none !important;
     border: none !important;
+    border-left: none !important;
     outline: none !important;
     padding: 0 !important;
-    margin: 0 auto !important;
+    margin: 0 !important;
     background: #ffffff !important;
     color: #000000 !important;
     overflow: visible !important;
@@ -374,8 +374,6 @@ function printReceipt() {
     padding: 3px 12px !important;
     margin-top: 8px !important;
     border-radius: 999px !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
   }
 
   .receipt-meta-grid {
@@ -390,8 +388,6 @@ function printReceipt() {
     font-size: 9pt !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
   }
 
   .meta-label { color: #475569 !important; font-size: 8.5pt !important; }
@@ -421,8 +417,6 @@ function printReceipt() {
     font-size: 8.5pt !important;
     text-transform: uppercase !important;
     font-weight: 700 !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
   }
 
   .receipt-items-table td,
@@ -456,12 +450,11 @@ function printReceipt() {
     font-size: 12pt !important;
     padding-top: 0.5rem !important;
     margin-top: 0.25rem !important;
-    border-top: 2px solid #000000 !important;
   }
   .total-row.grand-total span {
     color: #000000 !important;
     font-weight: 800 !important;
-    border-top: none !important;
+    border-top: 2px solid #000000 !important;
   }
 
   .receipt-barcode {
@@ -472,25 +465,10 @@ function printReceipt() {
     margin: 1.5rem 0 !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
   }
 
-  .barcode-lines {
-    display: flex !important;
-    gap: 3px !important;
-    height: 28px !important;
-    align-items: center !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-  .barcode-bar {
-    background: #000000 !important;
-    background-color: #000000 !important;
-    height: 100% !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
+  .barcode-lines { display: flex !important; gap: 3px !important; height: 28px !important; align-items: center !important; }
+  .barcode-bar { background: #000000 !important; height: 100% !important; }
   .barcode-text { color: #000000 !important; font-size: 8.5pt !important; font-family: monospace !important; }
 
   .receipt-footer {
