@@ -301,6 +301,8 @@ function printReceipt() {
     margin: 0 !important;
     padding: 0 !important;
     background: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   body * {
@@ -319,7 +321,7 @@ function printReceipt() {
     min-height: 100% !important;
     background: #ffffff !important;
     backdrop-filter: none !important;
-    padding: 15mm 20mm !important;
+    padding: 12mm 15mm !important;
     margin: 0 !important;
     border: none !important;
     border-left: none !important;
@@ -327,6 +329,8 @@ function printReceipt() {
     display: block !important;
     overflow: visible !important;
     z-index: 999999 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .receipt-card {
@@ -347,21 +351,21 @@ function printReceipt() {
   .receipt-header {
     text-align: center !important;
     border-bottom: 2px solid #000000 !important;
-    padding-bottom: 1.25rem !important;
-    margin-bottom: 1.5rem !important;
+    padding-bottom: 0.6rem !important;
+    margin-bottom: 0.75rem !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
   .company-title {
     color: #000000 !important;
-    font-size: 18pt !important;
+    font-size: 16pt !important;
     font-weight: 800 !important;
   }
 
   .company-subtitle {
     color: #333333 !important;
-    font-size: 9pt !important;
+    font-size: 8.5pt !important;
   }
 
   .official-invoice-tag {
@@ -369,34 +373,38 @@ function printReceipt() {
     background: #f1f5f9 !important;
     color: #000000 !important;
     border: 1px solid #000000 !important;
-    font-size: 8.5pt !important;
+    font-size: 8pt !important;
     font-weight: 800 !important;
-    padding: 3px 12px !important;
-    margin-top: 8px !important;
+    padding: 2px 10px !important;
+    margin-top: 6px !important;
     border-radius: 999px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .receipt-meta-grid {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
-    gap: 1rem !important;
+    gap: 0.5rem 1rem !important;
     background: #f8fafc !important;
     border: 1px solid #cbd5e1 !important;
     color: #000000 !important;
-    padding: 1rem !important;
-    margin-bottom: 1.5rem !important;
-    font-size: 9pt !important;
+    padding: 0.6rem 0.8rem !important;
+    margin-bottom: 0.75rem !important;
+    font-size: 8.5pt !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
-  .meta-label { color: #475569 !important; font-size: 8.5pt !important; }
-  .meta-val { color: #000000 !important; font-size: 9pt !important; }
+  .meta-label { color: #475569 !important; font-size: 8pt !important; }
+  .meta-val { color: #000000 !important; font-size: 8.5pt !important; }
 
   .receipt-items-table {
     width: 100% !important;
     border-collapse: collapse !important;
-    margin-bottom: 1.5rem !important;
+    margin-bottom: 0.75rem !important;
     page-break-inside: auto !important;
   }
 
@@ -413,10 +421,12 @@ function printReceipt() {
     background: #e2e8f0 !important;
     color: #000000 !important;
     border-bottom: 2px solid #000000 !important;
-    padding: 0.6rem 0.75rem !important;
-    font-size: 8.5pt !important;
+    padding: 0.4rem 0.6rem !important;
+    font-size: 8pt !important;
     text-transform: uppercase !important;
     font-weight: 700 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .receipt-items-table td,
@@ -425,56 +435,72 @@ function printReceipt() {
     color: #000000 !important;
     font-weight: 600 !important;
     border-bottom: none !important;
-    padding: 0.5rem 0.75rem !important;
-    font-size: 9pt !important;
+    padding: 0.35rem 0.6rem !important;
+    font-size: 8.5pt !important;
   }
 
   .receipt-totals-container {
     display: flex !important;
     justify-content: flex-end !important;
-    margin-bottom: 1.5rem !important;
+    margin-bottom: 0.75rem !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
   .receipt-totals-box {
-    width: 280px !important;
+    width: 260px !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 0.4rem !important;
-    font-size: 9pt !important;
+    gap: 0.3rem !important;
+    font-size: 8.5pt !important;
   }
 
   .total-row span { color: #000000 !important; }
   .total-row.grand-total {
-    font-size: 12pt !important;
-    padding-top: 0.5rem !important;
-    margin-top: 0.25rem !important;
+    font-size: 11pt !important;
+    padding-top: 0.35rem !important;
+    margin-top: 0.2rem !important;
+    border-top: 2px solid #000000 !important;
   }
   .total-row.grand-total span {
     color: #000000 !important;
     font-weight: 800 !important;
-    border-top: 2px solid #000000 !important;
+    border-top: none !important;
   }
 
   .receipt-barcode {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    gap: 4px !important;
-    margin: 1.5rem 0 !important;
+    gap: 3px !important;
+    margin: 0.75rem 0 !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
-  .barcode-lines { display: flex !important; gap: 3px !important; height: 28px !important; align-items: center !important; }
-  .barcode-bar { background: #000000 !important; height: 100% !important; }
-  .barcode-text { color: #000000 !important; font-size: 8.5pt !important; font-family: monospace !important; }
+  .barcode-lines {
+    display: flex !important;
+    gap: 3px !important;
+    height: 24px !important;
+    align-items: center !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .barcode-bar {
+    background: #000000 !important;
+    background-color: #000000 !important;
+    height: 100% !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .barcode-text { color: #000000 !important; font-size: 8pt !important; font-family: monospace !important; }
 
   .receipt-footer {
     border-top: none !important;
     padding-top: 0 !important;
-    margin-top: 2rem !important;
+    margin-top: 1rem !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
@@ -482,7 +508,7 @@ function printReceipt() {
   .signature-section {
     display: flex !important;
     justify-content: space-between !important;
-    margin-top: 40px !important;
+    margin-top: 25px !important;
     padding-top: 0 !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
@@ -491,13 +517,13 @@ function printReceipt() {
   .sig-box {
     width: 42% !important;
     text-align: center !important;
-    font-size: 9.5pt !important;
+    font-size: 8.5pt !important;
     color: #000000 !important;
   }
 
   .sig-line {
     border-top: 1.5px solid #000000 !important;
-    margin-bottom: 8px !important;
+    margin-bottom: 6px !important;
   }
 
   .no-print-controls,
