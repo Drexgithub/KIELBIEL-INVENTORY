@@ -635,11 +635,15 @@ html, body {
 }
 
 .form-input,
-input[type="text"],
-input[type="number"],
-input[type="email"],
-input[type="password"],
-input[type="date"] {
+.og-app-layout input[type="text"],
+.og-app-layout input[type="number"],
+.og-app-layout input[type="email"],
+.og-app-layout input[type="password"],
+.og-app-layout input[type="date"],
+.modal-card input[type="text"],
+.modal-card input[type="password"],
+.modal-card input[type="email"],
+.modal-card input[type="number"] {
   background-color: var(--og-bg-input) !important;
   border: 1px solid var(--og-border-card) !important;
   border-radius: var(--og-radius-sm) !important;
@@ -651,9 +655,11 @@ input[type="date"] {
 }
 
 .form-input:focus,
-input[type="text"]:focus,
-input[type="number"]:focus,
-input[type="date"]:focus {
+.og-app-layout input[type="text"]:focus,
+.og-app-layout input[type="number"]:focus,
+.og-app-layout input[type="password"]:focus,
+.og-app-layout input[type="date"]:focus,
+.modal-card input:focus {
   border-color: var(--og-primary) !important;
 }
 
