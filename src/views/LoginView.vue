@@ -87,16 +87,6 @@
             <span v-if="isLoading" class="btn-spinner"></span>
             <span>{{ isLoading ? 'Signing in...' : 'Sign in' }}</span>
           </button>
-
-          <!-- Quick Demo Sign In -->
-          <button 
-            type="button" 
-            class="btn btn-outline w-100" 
-            style="margin-top: 12px; border-radius: 999px; height: 46px; font-weight: 700; border: 1.5px solid var(--uv-border); color: var(--uv-text);" 
-            @click="quickDemoLogin"
-          >
-            ⚡ Instant UVentra Demo Sign In
-          </button>
         </form>
 
 
@@ -216,11 +206,6 @@ async function handleLogin() {
 
   store.login(userObj.email, userObj.role, userObj.name)
   isLoading.value = false
-  router.push('/dashboard')
-}
-
-function quickDemoLogin() {
-  store.login('david.warner@uventra.io', 'Admin User', 'David Warner')
   router.push('/dashboard')
 }
 
