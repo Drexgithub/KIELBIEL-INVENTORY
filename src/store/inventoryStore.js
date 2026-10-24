@@ -866,14 +866,27 @@ export const store = reactive({
   },
 
   async deleteReceipt(receiptNo) {
+    if (!receiptNo) return
     if (supabase) {
       try {
-        await supabase.from('receipts').delete().eq('receipt_no', receiptNo)
+        // 1. Delete associated line items first to ensure no foreign key deadlock or cascade issues
+        await supabase.from('receipt_items').delete().eq('receipt_no', receiptNo)
+        // 2. Delete the receipt record
+        const { error } = await supabase.from('receipts').delete().eq('receipt_no', receiptNo)
+        if (error) {
+          console.error('Supabase deleteReceipt error:', error)
+          throw error
+        }
       } catch (err) {
         console.error('Supabase deleteReceipt error:', err)
+        throw err
       }
     }
     this.receipts = this.receipts.filter(r => r.receipt_no !== receiptNo)
+    // If the currently open modal is for this receipt, close it
+    if (this.activeReceiptModal && this.activeReceiptModal.receipt_no === receiptNo) {
+      this.closeReceipt()
+    }
   },
 
   async addCategory(category) {

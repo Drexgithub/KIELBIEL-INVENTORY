@@ -120,6 +120,9 @@
         <button class="btn btn-mint" @click="goToReceipts">
           <ArrowRight style="width: 16px; height: 16px;" /> View in Receipts Ledger
         </button>
+        <button class="btn btn-outline" style="color: #EF4444; border-color: rgba(239, 68, 68, 0.4);" @click="deleteFromModal" :disabled="isDeletingModal">
+          <Trash2 style="width: 16px; height: 16px;" /> {{ isDeletingModal ? 'Deleting...' : 'Delete Receipt' }}
+        </button>
       </div>
 
     </div>
@@ -127,16 +130,33 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { store } from '../store/inventoryStore.js'
-import { Printer, X, ArrowRight } from 'lucide-vue-next'
+import { Printer, X, ArrowRight, Trash2 } from 'lucide-vue-next'
 
 const router = useRouter()
+const isDeletingModal = ref(false)
 
 function goToReceipts() {
   store.closeReceipt()
   router.push('/receipts')
+}
+
+async function deleteFromModal() {
+  if (!receipt.value?.receipt_no || isDeletingModal.value) return
+  const recNo = receipt.value.receipt_no
+  if (confirm(`Are you sure you want to delete receipt ${recNo}?`)) {
+    isDeletingModal.value = true
+    try {
+      await store.deleteReceipt(recNo)
+      store.closeReceipt()
+    } catch (err) {
+      alert('Failed to delete receipt: ' + (err.message || err))
+    } finally {
+      isDeletingModal.value = false
+    }
+  }
 }
 
 const receipt = computed(() => store.activeReceiptModal || {})

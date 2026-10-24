@@ -172,7 +172,7 @@
                   </button>
 
                   <!-- Delete Receipt -->
-                  <button class="icon-btn text-danger" style="width: 30px; height: 30px;" title="Delete Receipt" @click="delReceipt(r.receipt_no)">
+                  <button class="icon-btn text-danger" style="width: 30px; height: 30px;" title="Delete Receipt" @click="openDeleteModal(r)">
                     <Trash2 style="width: 14px; height: 14px;" />
                   </button>
                 </div>
@@ -199,6 +199,51 @@
         </div>
       </div>
     </div>
+
+    <!-- 4. DELETE RECEIPT CONFIRMATION MODAL -->
+    <transition name="fade">
+      <div v-if="receiptToDelete" class="modal-overlay" @click.self="receiptToDelete = null">
+        <div class="modal-card" style="max-width: 450px; text-align: center; padding: 2rem;">
+          <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(239, 68, 68, 0.15); color: #EF4444; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem;">
+            <Trash2 style="width: 28px; height: 28px;" />
+          </div>
+
+          <h3 style="font-size: 1.25rem; font-weight: 800; color: #FFFFFF; margin-bottom: 0.5rem;">
+            Delete Receipt?
+          </h3>
+
+          <p style="font-size: 0.88rem; color: var(--og-text-secondary); line-height: 1.5; margin-bottom: 1.25rem;">
+            Are you sure you want to permanently delete receipt <strong style="color: #3B82F6; font-family: monospace;">{{ receiptToDelete.receipt_no }}</strong> for <strong>{{ receiptToDelete.customer_name || 'Walk-in Customer' }}</strong> (₱{{ Number(receiptToDelete.grand_total).toLocaleString('en-US', { minimumFractionDigits: 2 }) }})?
+            <br><span style="color: #EF4444; font-size: 0.78rem;">This will permanently remove the record from both local state and cloud database.</span>
+          </p>
+
+          <div v-if="deleteError" class="status-badge status-cancelled" style="padding: 8px 12px; font-size: 0.82rem; margin-bottom: 1rem;">
+            {{ deleteError }}
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; justify-content: center;">
+            <button 
+              type="button" 
+              class="btn btn-outline w-100" 
+              @click="receiptToDelete = null"
+              :disabled="isDeleting"
+            >
+              Cancel
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-danger w-100" 
+              @click="confirmDeleteReceipt"
+              :disabled="isDeleting"
+              style="background: #DC2626; border-color: #DC2626; color: #FFFFFF; font-weight: 700;"
+            >
+              <span v-if="isDeleting" class="btn-spinner" style="width: 14px; height: 14px; border-width: 2px;"></span>
+              <span>{{ isDeleting ? 'Deleting...' : 'Delete Permanently' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
 
   </div>
 </template>
@@ -285,8 +330,43 @@ function directPrint(r) {
   }, 300)
 }
 
+// Delete modal state
+const receiptToDelete = ref(null)
+const isDeleting = ref(false)
+const deleteError = ref('')
+const deleteSuccess = ref('')
+
+function openDeleteModal(r) {
+  receiptToDelete.value = r
+  deleteError.value = ''
+}
+
+async function confirmDeleteReceipt() {
+  if (!receiptToDelete.value || isDeleting.value) return
+  isDeleting.value = true
+  deleteError.value = ''
+
+  const recNo = receiptToDelete.value.receipt_no
+  try {
+    await store.deleteReceipt(recNo)
+    deleteSuccess.value = `✓ Receipt ${recNo} permanently deleted.`
+    receiptToDelete.value = null
+    setTimeout(() => {
+      deleteSuccess.value = ''
+    }, 3000)
+  } catch (err) {
+    console.error('Delete receipt error:', err)
+    deleteError.value = 'Failed to delete receipt: ' + (err.message || err)
+  } finally {
+    isDeleting.value = false
+  }
+}
+
 function delReceipt(receiptNo) {
-  if (confirm(`Delete receipt entry ${receiptNo}?`)) {
+  const r = store.receipts.find(item => item.receipt_no === receiptNo)
+  if (r) {
+    openDeleteModal(r)
+  } else {
     store.deleteReceipt(receiptNo)
   }
 }
