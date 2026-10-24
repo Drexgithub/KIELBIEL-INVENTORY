@@ -9,10 +9,10 @@
       </div>
 
       <div class="og-header-actions">
-        <button class="btn-dark" @click="showSupport = true">
-          <HelpCircle style="width: 15px; height: 15px;" />
-          <span>Support & Help</span>
-        </button>
+        <router-link to="/pos" class="btn btn-primary btn-sm" style="font-size: 0.82rem; padding: 6px 14px; display: inline-flex; align-items: center; gap: 6px;">
+          <ShoppingCart style="width: 14px; height: 14px;" />
+          <span>+ New Sale (POS)</span>
+        </router-link>
       </div>
     </div>
 
@@ -556,7 +556,8 @@ import {
   Calendar, 
   ChevronLeft, 
   ChevronRight, 
-  Receipt 
+  Receipt,
+  ShoppingCart
 } from 'lucide-vue-next'
 
 const showSupport = ref(false)
