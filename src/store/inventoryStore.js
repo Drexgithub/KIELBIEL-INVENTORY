@@ -742,6 +742,9 @@ export const store = reactive({
   },
 
   async addReceipt(newReceipt) {
+    const createdAtIso = new Date().toISOString()
+    let receiptPayload = null
+
     if (supabase) {
       try {
         let recNo = newReceipt.receipt_no
@@ -778,7 +781,7 @@ export const store = reactive({
         }
 
         // 1. Insert Receipt
-        const receiptPayload = {
+        receiptPayload = {
           receipt_no: newReceipt.receipt_no,
           invoice_no: newReceipt.invoice_no,
           customer_name: (newReceipt.customer_name || 'Walk-in Customer').trim(),
@@ -789,7 +792,7 @@ export const store = reactive({
           tax: Number(newReceipt.tax) || 0,
           grand_total: Number(newReceipt.grand_total) || 0,
           status: newReceipt.status || 'Unpaid',
-          created_at: new Date().toISOString()
+          created_at: createdAtIso
         }
 
         const { error: recErr } = await supabase
@@ -833,7 +836,7 @@ export const store = reactive({
 
     // Local reactive update
     if (!newReceipt.raw_created_at) {
-      newReceipt.raw_created_at = receiptPayload ? receiptPayload.created_at : new Date().toISOString()
+      newReceipt.raw_created_at = receiptPayload ? receiptPayload.created_at : createdAtIso
     }
     this.receipts.unshift(newReceipt)
     if (newReceipt.items) {

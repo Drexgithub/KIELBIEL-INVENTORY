@@ -110,12 +110,15 @@
       </div>
 
       <!-- Action Buttons (Hidden on Print) -->
-      <div class="modal-footer no-print-controls" style="margin-top: 1.5rem; justify-content: center; gap: 1rem;">
+      <div class="modal-footer no-print-controls" style="margin-top: 1.5rem; justify-content: center; gap: 1rem; flex-wrap: wrap;">
         <button class="btn btn-outline" @click="store.closeReceipt">
           <X style="width: 16px; height: 16px;" /> Close
         </button>
         <button class="btn btn-primary" @click="printReceipt">
           <Printer style="width: 16px; height: 16px;" /> Print Full A4 Receipt
+        </button>
+        <button class="btn btn-mint" @click="goToReceipts">
+          <ArrowRight style="width: 16px; height: 16px;" /> View in Receipts Ledger
         </button>
       </div>
 
@@ -125,8 +128,16 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { store } from '../store/inventoryStore.js'
-import { Printer, X } from 'lucide-vue-next'
+import { Printer, X, ArrowRight } from 'lucide-vue-next'
+
+const router = useRouter()
+
+function goToReceipts() {
+  store.closeReceipt()
+  router.push('/receipts')
+}
 
 const receipt = computed(() => store.activeReceiptModal || {})
 

@@ -198,15 +198,27 @@
 
         <button 
           class="btn pos-checkout-btn w-100" 
-          :disabled="!cart.length"
+          :disabled="!cart.length || isProcessing"
           @click="processCheckout"
         >
-          <CheckCircle style="width: 20px; height: 20px;" /> Complete Order & Print Receipt
+          <span v-if="isProcessing" class="btn-spinner" style="width: 18px; height: 18px; border-width: 2px;"></span>
+          <CheckCircle v-else style="width: 20px; height: 20px;" />
+          <span>{{ isProcessing ? 'Completing Order...' : 'Complete Order & Print Receipt' }}</span>
         </button>
 
-        <button class="btn btn-outline w-100" @click="resetPos">
+        <button class="btn btn-outline w-100" @click="resetPos" :disabled="isProcessing">
           Reset Order Form
         </button>
+
+        <!-- Success banner when receipt is generated -->
+        <transition name="fade">
+          <div v-if="lastCompletedReceipt" class="status-badge status-completed" style="padding: 10px 14px; font-size: 0.82rem; display: flex; align-items: center; justify-content: space-between; border-radius: 10px; margin-top: 0.5rem;">
+            <span>✓ Order <strong>{{ lastCompletedReceipt }}</strong> saved!</span>
+            <router-link to="/receipts" style="text-decoration: underline; font-weight: 700; color: inherit; display: inline-flex; align-items: center; gap: 4px;">
+              View Ledger <ArrowRight style="width: 14px; height: 14px;" />
+            </router-link>
+          </div>
+        </transition>
       </div>
 
     </div>
@@ -273,7 +285,11 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { store } from '../store/inventoryStore.js'
-import { User, Search, ShoppingCart, Trash2, CheckCircle, AlertTriangle, XCircle, ChevronDown } from 'lucide-vue-next'
+import { User, Search, ShoppingCart, Trash2, CheckCircle, AlertTriangle, XCircle, ChevronDown, ArrowRight } from 'lucide-vue-next'
+
+// Checkout state
+const isProcessing = ref(false)
+const lastCompletedReceipt = ref('')
 
 // Initialized from persistent store draft so navigating to other pages does not erase encoded items
 const productSearch = ref(store.posDraft?.productSearch || '')
@@ -467,43 +483,62 @@ function handleSearchEnter() {
 }
 
 async function processCheckout() {
-  if (!cart.value.length) return
+  if (!cart.value.length || isProcessing.value) return
+  isProcessing.value = true
 
-  const nextNumbers = store.generateNextReceiptNumbers()
-  const receiptNo = nextNumbers.receipt_no
-  const invoiceNo = nextNumbers.invoice_no
-  const nowStr = new Date().toLocaleString()
+  try {
+    const nextNumbers = store.generateNextReceiptNumbers()
+    const receiptNo = nextNumbers.receipt_no
+    const invoiceNo = nextNumbers.invoice_no
+    const nowStr = new Date().toLocaleString()
 
-  const newReceipt = {
-    receipt_no: receiptNo,
-    invoice_no: invoiceNo,
-    customer_name: customerName.value.trim() || 'Walk-in Customer',
-    cashier_name: store.currentUser.name || 'Admin User',
-    payment_method: paymentMethod.value || 'Cash',
-    subtotal: subtotal.value,
-    discount: discountAmount.value,
-    tax: 0,
-    grand_total: grandTotal.value,
-    created_at: nowStr,
-    status: 'Unpaid',
-    items: cart.value.map(item => ({
-      item_desc: item.name,
-      quantity: Number(item.quantity) || 1,
-      unit_price: Number(item.price) || 0,
-      line_total: (Number(item.price) || 0) * (Number(item.quantity) || 1)
-    }))
+    const newReceipt = {
+      receipt_no: receiptNo,
+      invoice_no: invoiceNo,
+      customer_name: customerName.value.trim() || 'Walk-in Customer',
+      cashier_name: store.currentUser.name || 'Admin User',
+      payment_method: paymentMethod.value || 'Cash',
+      subtotal: subtotal.value,
+      discount: discountAmount.value,
+      tax: 0,
+      grand_total: grandTotal.value,
+      created_at: nowStr,
+      status: 'Unpaid',
+      items: cart.value.map(item => ({
+        item_desc: item.name,
+        quantity: Number(item.quantity) || 1,
+        unit_price: Number(item.price) || 0,
+        line_total: (Number(item.price) || 0) * (Number(item.quantity) || 1)
+      }))
+    }
+
+    // Update customer totals if matched in store.customers
+    const selectedCust = store.customers.find(c => c.name === customerName.value)
+    if (selectedCust) {
+      selectedCust.totalSpent = (Number(selectedCust.totalSpent) || 0) + grandTotal.value
+      selectedCust.totalOrders = (Number(selectedCust.totalOrders) || 0) + 1
+    }
+
+    await store.addReceipt(newReceipt)
+    lastCompletedReceipt.value = newReceipt.receipt_no
+
+    // Add alert notification
+    store.notifications.unshift({
+      id: Date.now(),
+      title: '✅ Order Completed',
+      desc: `Receipt ${newReceipt.receipt_no} (₱${Number(grandTotal.value).toFixed(2)}) saved successfully.`,
+      time: 'Just now',
+      unread: true
+    })
+
+    store.openReceipt(newReceipt)
+    resetPos()
+  } catch (err) {
+    console.error('Error during checkout:', err)
+    alert('Checkout could not be completed: ' + (err.message || err))
+  } finally {
+    isProcessing.value = false
   }
-
-  // Update customer totals if matched in store.customers
-  const selectedCust = store.customers.find(c => c.name === customerName.value)
-  if (selectedCust) {
-    selectedCust.totalSpent = (Number(selectedCust.totalSpent) || 0) + grandTotal.value
-    selectedCust.totalOrders = (Number(selectedCust.totalOrders) || 0) + 1
-  }
-
-  await store.addReceipt(newReceipt)
-  store.openReceipt(newReceipt)
-  resetPos()
 }
 
 function resetPos() {
