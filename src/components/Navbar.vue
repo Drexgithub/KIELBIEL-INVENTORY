@@ -49,16 +49,10 @@
       <div style="position: relative;">
         <div 
           class="btn-dark" 
-          style="padding: 4px 10px 4px 6px; border-radius: 9999px; display: flex; align-items: center; gap: 8px; cursor: pointer;"
+          style="padding: 5px 12px; border-radius: 9999px; display: flex; align-items: center; gap: 8px; cursor: pointer;"
           @click="showUserMenu = !showUserMenu"
         >
-          <img 
-            :src="avatarUrl" 
-            alt="User" 
-            style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;" 
-            @error="handleAvatarError"
-          />
-          <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.1;">
+          <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.15;">
             <span style="font-size: 0.78rem; font-weight: 700; color: #FFFFFF;">{{ store.currentUser.name || 'Kiel Hedrix' }}</span>
             <span style="font-size: 0.65rem; color: var(--og-text-muted);">{{ store.currentUser.role || 'Admin User' }}</span>
           </div>
@@ -126,11 +120,7 @@ const showNotifs = ref(false)
 const showUserMenu = ref(false)
 const showSupportModal = ref(false)
 
-const avatarUrl = ref('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80')
 
-function handleAvatarError(e) {
-  e.target.src = 'https://ui-avatars.com/api/?name=Kiel+Hedrix&background=2563EB&color=fff'
-}
 
 const unreadCount = computed(() => {
   return store.notifications.filter(n => n.unread).length
