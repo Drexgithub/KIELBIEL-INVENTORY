@@ -1,13 +1,14 @@
 <template>
-  <div class="content">
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">Categories</h1>
-        <p class="page-description">Organize products into brand & item categories. Click any category card to view its product inventory list.</p>
+  <div class="og-categories-page">
+    <div class="og-page-header">
+      <div class="og-page-title-box">
+        <h1 class="og-page-title">Categories</h1>
+        <p class="og-page-subtitle">Organize product catalog, category lines, brand classification, and item groupings.</p>
       </div>
-      <div class="header-actions">
-        <button v-if="store.isAdmin" class="btn btn-mint" @click="showAddModal = true">
-          <Plus /> Add New Category
+      <div class="og-header-actions">
+        <button v-if="store.isAdmin" class="btn btn-primary" @click="showAddModal = true">
+          <Plus style="width: 14px; height: 14px;" />
+          <span>+ Add New Category</span>
         </button>
       </div>
     </div>
@@ -22,28 +23,24 @@
         style="justify-content: space-between; cursor: pointer; transition: all 0.25s ease; border: 1.5px solid var(--border);"
         @click="openCategoryProducts(cat.name)"
       >
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-          <div class="stat-icon-circle" style="margin-bottom: 0; background: var(--primary-light); color: var(--primary);">
-            <Layers />
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+          <div>
+            <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem;">
+              {{ cat.name }}
+            </h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">
+              {{ cat.description || 'General product category' }}
+            </p>
           </div>
           <button 
             v-if="store.isAdmin"
             class="icon-btn text-danger" 
             title="Delete Category" 
-            style="width: 32px; height: 32px;" 
+            style="width: 32px; height: 32px; flex-shrink: 0;" 
             @click.stop="deleteCategory(cat)"
           >
             <Trash2 style="width: 15px; height: 15px;" />
           </button>
-        </div>
-
-        <div>
-          <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem;">
-            {{ cat.name }}
-          </h3>
-          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">
-            {{ cat.description || 'General product category' }}
-          </p>
         </div>
 
         <div style="margin-top: 1.25rem; padding-top: 0.875rem; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
@@ -64,7 +61,7 @@
         <!-- Modal Header -->
         <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between;">
           <div>
-            <h3 style="font-size: 1.25rem; font-weight: 800; color: #0F172A; display: flex; align-items: center; gap: 8px;">
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: #FFFFFF; display: flex; align-items: center; gap: 8px;">
               <Package style="width: 22px; height: 22px; color: var(--primary);" />
               <span>{{ selectedCategory }} Products</span>
               <span class="status-badge status-completed" style="font-size: 0.75rem; margin-left: 6px;">
@@ -158,7 +155,7 @@
     <div v-if="showAddModal" class="modal-overlay" @click.self="showAddModal = false">
       <div class="modal-card">
         <div class="modal-header">
-          <h3 style="font-size: 1.1rem; font-weight: 700; color: #0F172A;">
+          <h3 style="font-size: 1.1rem; font-weight: 700; color: #FFFFFF;">
             <Layers style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 6px;" /> 
             Add New Category
           </h3>

@@ -1,20 +1,19 @@
 <template>
-  <div class="content">
+  <div class="og-suppliers-page">
     <!-- Page Header -->
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">Suppliers</h1>
-        <p class="page-description">Monitor supplier purchase capital, track in-stock and sold quantities, and review date-filtered purchase balances.</p>
+    <div class="og-page-header">
+      <div class="og-page-title-box">
+        <h1 class="og-page-title">Suppliers</h1>
+        <p class="og-page-subtitle">Supplier accounts, vendor purchases, wholesale replenishments, and capital balances.</p>
       </div>
-      <div class="header-actions">
-        <button class="btn btn-outline" @click="exportSuppliersCSV">
-          <Download /> Export CSV
-        </button>
-        <button class="btn btn-mint" @click="openQuickRestockModal(null)">
-          <PlusCircle /> Add Product Stock
+      <div class="og-header-actions">
+        <button class="btn-dark" @click="exportSuppliersCSV">
+          <Download style="width: 14px; height: 14px;" />
+          <span>Export CSV</span>
         </button>
         <button class="btn btn-primary" @click="openRegisterSupplierModal">
-          <Plus /> Register Supplier
+          <Plus style="width: 14px; height: 14px;" />
+          <span>Register Supplier</span>
         </button>
       </div>
     </div>

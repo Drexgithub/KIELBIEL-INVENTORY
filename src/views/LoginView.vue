@@ -11,6 +11,9 @@
       <div class="hero-curved-mask"></div>
 
       <div class="hero-text-content">
+        <div style="width: 56px; height: 56px; background: #000000; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 14px; padding: 4px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);">
+          <img src="/logo.png" alt="KIELBIEL Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 10px;" />
+        </div>
         <h1 class="welcome-heading">WELCOME</h1>
         <h2 class="company-sub-title">KIEL BIEL CONSUMER GOODS TRADING</h2>
         <p class="hero-tagline">
@@ -83,6 +86,16 @@
           <button type="submit" class="primary-signin-btn" :disabled="isLoading">
             <span v-if="isLoading" class="btn-spinner"></span>
             <span>{{ isLoading ? 'Signing in...' : 'Sign in' }}</span>
+          </button>
+
+          <!-- Quick Demo Sign In -->
+          <button 
+            type="button" 
+            class="btn btn-outline w-100" 
+            style="margin-top: 12px; border-radius: 999px; height: 46px; font-weight: 700; border: 1.5px solid var(--uv-border); color: var(--uv-text);" 
+            @click="quickDemoLogin"
+          >
+            ⚡ Instant UVentra Demo Sign In
           </button>
         </form>
 
@@ -203,6 +216,11 @@ async function handleLogin() {
 
   store.login(userObj.email, userObj.role, userObj.name)
   isLoading.value = false
+  router.push('/dashboard')
+}
+
+function quickDemoLogin() {
+  store.login('david.warner@uventra.io', 'Admin User', 'David Warner')
   router.push('/dashboard')
 }
 

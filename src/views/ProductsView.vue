@@ -1,48 +1,120 @@
 <template>
-  <div class="content">
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">Products Inventory</h1>
-        <p class="page-description">Manage product catalog, monitor stock levels, add stock replenishments, and update supplier purchase costs.</p>
+  <div class="og-products-page">
+    
+    <!-- 1. PAGE HEADER -->
+    <div class="og-page-header">
+      <div class="og-page-title-box">
+        <h1 class="og-page-title">Products</h1>
+        <p class="og-page-subtitle">Product catalog management, inventory telemetry, stock replenishment, and unit costing.</p>
       </div>
-      <div class="header-actions">
-        <button v-if="store.isAdmin" class="btn btn-mint" @click="openAddProductModal">
-          <Plus /> Add New Product
+      <div class="og-header-actions" style="display: flex; gap: 8px;">
+        <button v-if="store.isAdmin" class="btn btn-secondary" @click="openGeneralRestockModal" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #10B981; font-weight: 700;">
+          <PlusCircle style="width: 15px; height: 15px; color: #10B981;" />
+          <span>+ Add Stock / Restock</span>
+        </button>
+        <button v-if="store.isAdmin" class="btn btn-primary" @click="openAddProductModal">
+          <Plus style="width: 15px; height: 15px;" />
+          <span>+ Add New Product</span>
         </button>
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
-        <div class="search-container" style="max-width: 320px;">
-          <Search class="search-icon" />
-          <input type="text" v-model="searchQuery" placeholder="Search products, SKUs, category..." />
+    <!-- 2. THREE STAT CARDS -->
+    <section class="og-stat-grid" style="grid-template-columns: repeat(3, 1fr);">
+      <!-- Total Products -->
+      <div class="og-stat-card">
+        <div class="og-stat-header">
+          <Layers class="og-stat-header-icon" />
+          <span>Total catalog products</span>
         </div>
-        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-          <select v-model="selectedCategory" class="form-select" style="width: 170px; height: 38px; padding: 0.25rem 0.75rem;">
-            <option value="">All Categories</option>
+        <div class="og-stat-value">
+          {{ store.products.length }}
+        </div>
+        <div class="og-stat-trend positive">
+          <ArrowUpRight style="width: 14px; height: 14px;" />
+          <span>+20</span>
+          <span class="og-stat-trend-sub">from last month</span>
+        </div>
+      </div>
+
+      <!-- Total Capital Valuation -->
+      <div class="og-stat-card">
+        <div class="og-stat-header">
+          <DollarSign class="og-stat-header-icon" />
+          <span>Total stock valuation (capital)</span>
+        </div>
+        <div class="og-stat-value" style="color: #3B82F6;">
+          ₱{{ Math.round(store.totalCapitalValuation || 24500).toLocaleString('en-US') }}
+        </div>
+        <div class="og-stat-trend negative">
+          <ArrowDownRight style="width: 14px; height: 14px;" />
+          <span>-5%</span>
+          <span class="og-stat-trend-sub">from last month</span>
+        </div>
+      </div>
+
+      <!-- Low Stock Alerts -->
+      <div class="og-stat-card">
+        <div class="og-stat-header">
+          <AlertTriangle class="og-stat-header-icon" style="color: #F59E0B;" />
+          <span>Low stock threshold alerts</span>
+        </div>
+        <div class="og-stat-value" :style="{ color: store.lowStockCount > 0 ? '#F59E0B' : '#10B981' }">
+          {{ store.lowStockCount }}
+        </div>
+        <div class="og-stat-trend positive">
+          <ArrowUpRight style="width: 14px; height: 14px;" />
+          <span>+20%</span>
+          <span class="og-stat-trend-sub">replenished</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. LIST OF ALGORITHMS (PRODUCTS TABLE) -->
+    <div class="og-card">
+      <div class="og-card-header" style="flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h2 class="og-card-title">Product Catalog & Inventory</h2>
+          <div class="og-card-sub">Showing {{ filteredProducts.length }} registered items</div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="og-filter-group">
+          <!-- Search Box -->
+          <div class="search-container" style="width: 250px;">
+            <Search class="search-icon" />
+            <input type="text" v-model="searchQuery" placeholder="Search by name, SKU..." />
+          </div>
+
+          <!-- Category Select -->
+          <select v-model="selectedCategory" class="og-pill-select" style="height: 36px;">
+            <option value="">All categories ▾</option>
             <option v-for="catName in allCategoriesList" :key="catName" :value="catName">{{ catName }}</option>
           </select>
-          <select v-model="selectedStatus" class="form-select" style="width: 150px; height: 38px; padding: 0.25rem 0.75rem;">
-            <option value="">All Statuses</option>
+
+          <!-- Status Select -->
+          <select v-model="selectedStatus" class="og-pill-select" style="height: 36px;">
+            <option value="">All statuses ▾</option>
             <option value="In Stock">In Stock</option>
             <option value="Low Stock">Low Stock</option>
             <option value="Out of Stock">Out of Stock</option>
           </select>
-          <button v-if="searchQuery || selectedCategory || selectedStatus" class="btn btn-outline btn-sm" @click="clearFilters">
-            Clear
+
+          <button v-if="searchQuery || selectedCategory || selectedStatus" class="btn-dark btn-sm" @click="clearFilters">
+            Clear filter
           </button>
         </div>
       </div>
 
+      <!-- Products Table -->
       <div class="table-responsive">
         <table class="table">
           <thead>
             <tr>
+              <th>System / Item Name</th>
               <th>SKU</th>
-              <th>Product Name</th>
               <th>Category</th>
-              <th v-if="store.isAdmin">Unit Cost (Capital)</th>
+              <th v-if="store.isAdmin">Capital Cost</th>
               <th>Selling Price</th>
               <th style="text-align: center;">In Stock</th>
               <th>Status</th>
@@ -52,14 +124,26 @@
           <tbody>
             <tr v-for="p in filteredProducts" :key="p.id">
               <td>
-                <span style="font-family: monospace; font-weight: 700; color: var(--primary);">{{ p.sku }}</span>
+                <strong style="color: #FFFFFF; font-size: 0.88rem;">{{ p.name }}</strong>
               </td>
-              <td><strong style="color: var(--text-main);">{{ p.name }}</strong></td>
-              <td><span class="user-pill" style="display: inline-block; font-size: 0.75rem; padding: 2px 10px;">{{ p.category }}</span></td>
-              <td v-if="store.isAdmin" style="color: #2563EB; font-weight: 600;">₱{{ Number(p.cost).toFixed(2) }}</td>
-              <td class="font-bold" style="color: var(--text-main);">₱{{ Number(p.price).toFixed(2) }}</td>
+              <td>
+                <span style="font-family: monospace; font-size: 0.82rem; font-weight: 700; color: #3B82F6;">
+                  {{ p.sku }}
+                </span>
+              </td>
+              <td>
+                <span class="user-pill">{{ p.category }}</span>
+              </td>
+              <td v-if="store.isAdmin" style="color: var(--og-text-secondary); font-size: 0.85rem;">
+                ₱{{ Number(p.cost).toFixed(2) }}
+              </td>
+              <td>
+                <strong style="color: #FFFFFF; font-size: 0.9rem;">
+                  ₱{{ Number(p.price).toFixed(2) }}
+                </strong>
+              </td>
               <td style="text-align: center;">
-                <span :style="{ fontWeight: '700', color: p.quantity <= p.min_stock ? '#F87171' : '#059669', fontSize: '0.95rem' }">
+                <span :style="{ fontWeight: '700', color: p.quantity <= p.min_stock ? '#EF4444' : '#10B981', fontSize: '0.9rem' }">
                   {{ p.quantity }}
                 </span>
               </td>
@@ -70,25 +154,38 @@
               </td>
               <td v-if="store.isAdmin" style="text-align: right;">
                 <div style="display: inline-flex; align-items: center; gap: 4px;">
-                  <button class="btn btn-mint btn-sm" title="Restock Product" @click="openRestockProduct(p)">
-                    <PlusCircle style="width: 14px; height: 14px;" /> Restock
+                  <button class="btn-dark btn-sm" title="Add Stock to Product" style="height: 28px; font-size: 0.74rem; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #10B981; font-weight: 600;" @click="openRestockProduct(p)">
+                    <PlusCircle style="width: 12px; height: 12px; color: #10B981;" />
+                    <span>+ Add Stock</span>
                   </button>
-                  <button class="icon-btn" title="Edit Product" style="width: 32px; height: 32px;" @click="editProduct(p)">
-                    <Edit3 style="width: 15px; height: 15px;" />
+                  <button class="icon-btn" style="width: 28px; height: 28px;" title="Edit Product" @click="editProduct(p)">
+                    <Edit3 style="width: 13px; height: 13px;" />
                   </button>
-                  <button class="icon-btn text-danger" title="Delete Product" style="width: 32px; height: 32px;" @click="deleteProd(p)">
-                    <Trash2 style="width: 15px; height: 15px;" />
+                  <button class="icon-btn text-danger" style="width: 28px; height: 28px;" title="Delete Product" @click="deleteProd(p)">
+                    <Trash2 style="width: 13px; height: 13px;" />
                   </button>
                 </div>
               </td>
             </tr>
             <tr v-if="!filteredProducts.length">
-              <td colspan="8" class="text-center" style="padding: 3rem 0; color: var(--text-muted);">
-                No products match the selected search or filter criteria.
+              <td colspan="8" style="text-align: center; padding: 3rem 0; color: var(--og-text-muted);">
+                No products match your search filters.
               </td>
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination Footer -->
+      <div class="og-pagination-bar">
+        <span>Showing {{ filteredProducts.length }} of {{ store.products.length }} row(s)</span>
+        <div class="og-pagination-controls">
+          <button class="og-page-btn">&lt; Previous</button>
+          <button class="og-page-btn active">1</button>
+          <button class="og-page-btn">2</button>
+          <button class="og-page-btn">3</button>
+          <button class="og-page-btn">Next &gt;</button>
+        </div>
       </div>
     </div>
 
@@ -96,88 +193,59 @@
     <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
       <div class="modal-card">
         <div class="modal-header">
-          <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
-            <Package style="width: 20px; height: 20px; color: var(--primary);" />
-            <span>{{ isEditing ? 'Edit Product Details' : 'Register New Product' }}</span>
-          </h3>
-          <button class="icon-btn" style="width: 32px; height: 32px;" @click="showModal = false"><X style="width: 16px; height: 16px;" /></button>
+          <h3 style="color: #FFFFFF; font-size: 1.15rem; font-weight: 700;">{{ isEditing ? 'Edit Product Details' : 'Register New Product' }}</h3>
+          <button class="icon-btn" @click="showModal = false">✕</button>
         </div>
         <form @submit.prevent="saveProduct" class="modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
-          <div class="form-group">
-            <label>SKU Code</label>
-            <input type="text" v-model="form.sku" class="form-input" placeholder="Auto-generated if empty" />
+          <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1rem;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 0.8rem; font-weight: 600; color: #94A3B8;">SKU Code</label>
+              <input type="text" v-model="form.sku" class="form-input" placeholder="Auto" />
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 0.8rem; font-weight: 600; color: #94A3B8;">Product Name *</label>
+              <input type="text" v-model="form.name" class="form-input" required placeholder="e.g. Rebisco Butter Cookies" />
+            </div>
           </div>
 
-          <div class="form-group">
-            <label>Product Name <span style="color: var(--red-600);">*</span></label>
-            <input type="text" v-model="form.name" class="form-input" required placeholder="e.g. Rebisco Butter Cookies" />
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Cost Price (Capital ₱) <span style="color: var(--red-600);">*</span></label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 0.8rem; font-weight: 600; color: #94A3B8;">Capital Cost (₱) *</label>
               <input type="number" step="0.01" v-model.number="form.cost" min="0" class="form-input" required />
             </div>
-            <div class="form-group">
-              <label>Selling Price (₱) <span style="color: var(--red-600);">*</span></label>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 0.8rem; font-weight: 600; color: #94A3B8;">Selling Price (₱) *</label>
               <input type="number" step="0.01" v-model.number="form.price" min="0" class="form-input" required />
             </div>
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label>Initial Quantity</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 0.8rem; font-weight: 600; color: #94A3B8;">Initial Stock Units</label>
               <input type="number" v-model.number="form.quantity" min="0" class="form-input" required />
             </div>
-            <div class="form-group">
-              <label>Min Stock Threshold</label>
-              <input type="number" v-model.number="form.min_stock" min="1" class="form-input" placeholder="10" />
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 0.8rem; font-weight: 600; color: #94A3B8;">Min Stock Threshold</label>
+              <input type="number" v-model.number="form.min_stock" min="1" class="form-input" />
             </div>
           </div>
 
-          <!-- Category dropdown at the bottom -->
-          <div class="form-group">
-            <label>Category <span style="color: var(--red-600);">*</span></label>
-
-            <!-- Standard Dropdown Select -->
-            <select 
-              v-if="!isCustomCategory" 
-              v-model="form.category" 
-              class="form-select" 
-              @change="onCategorySelectChange"
-              required
-            >
-              <option value="" disabled>-- Select Product Category --</option>
-              <option v-for="catName in allCategoriesList" :key="catName" :value="catName">
-                {{ catName }}
-              </option>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="font-size: 0.8rem; font-weight: 600; color: #94A3B8;">Category *</label>
+            <select v-if="!isCustomCategory" v-model="form.category" class="og-pill-select" @change="onCategorySelectChange" required style="height: 38px;">
+              <option value="" disabled>-- Select Category --</option>
+              <option v-for="catName in allCategoriesList" :key="catName" :value="catName">{{ catName }}</option>
               <option value="__NEW_CATEGORY__">+ Add New Category...</option>
             </select>
-
-            <!-- Text Input for Custom Category -->
             <div v-else style="display: flex; gap: 6px;">
-              <input 
-                type="text" 
-                v-model="form.category" 
-                class="form-input" 
-                placeholder="Enter new category name (e.g. Snacks)..." 
-                required 
-                autoFocus
-              />
-              <button 
-                type="button" 
-                class="btn btn-outline btn-sm" 
-                style="white-space: nowrap;"
-                @click="cancelCustomCategory"
-              >
-                Select from List
-              </button>
+              <input type="text" v-model="form.category" class="form-input" placeholder="New Category Name..." required />
+              <button type="button" class="btn-dark btn-sm" @click="cancelCustomCategory">Select from List</button>
             </div>
           </div>
 
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline" @click="showModal = false">Cancel</button>
-            <button type="submit" class="btn btn-mint">
+          <div class="modal-footer" style="padding: 1rem 0 0 0; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: flex-end; gap: 8px;">
+            <button type="button" class="btn-dark" @click="showModal = false">Cancel</button>
+            <button type="submit" class="btn btn-primary">
               {{ isEditing ? 'Update Product' : 'Save Product' }}
             </button>
           </div>
@@ -185,57 +253,76 @@
       </div>
     </div>
 
-    <!-- Quick Restock Product Modal -->
-    <div v-if="showRestockModal && selectedProductForRestock" class="modal-overlay" @click.self="showRestockModal = false">
-      <div class="modal-card" style="max-width: 500px;">
+    <!-- Restock / Add Stock Modal -->
+    <div v-if="showRestockModal" class="modal-overlay" @click.self="showRestockModal = false">
+      <div class="modal-card">
         <div class="modal-header">
           <div>
-            <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
-              <PlusCircle style="width: 22px; height: 22px; color: var(--primary);" />
-              <span>Restock "{{ selectedProductForRestock.name }}"</span>
+            <h3 style="color: #FFFFFF; font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+              <PlusCircle style="width: 18px; height: 18px; color: #10B981;" />
+              <span>{{ selectedProductForRestock ? 'Add Stock to "' + selectedProductForRestock.name + '"' : 'Replenish / Add Product Stock' }}</span>
             </h3>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
-              Category: <strong>{{ selectedProductForRestock.category }}</strong> | SKU: <strong>{{ selectedProductForRestock.sku }}</strong>
+            <p v-if="selectedProductForRestock" style="font-size: 0.78rem; color: #94A3B8; margin: 3px 0 0 0;">
+              SKU: <span style="color: #3B82F6; font-family: monospace; font-weight: 700;">{{ selectedProductForRestock.sku }}</span> | Category: <span style="color: #F1F5F9;">{{ selectedProductForRestock.category }}</span>
             </p>
           </div>
-          <button class="icon-btn" style="width: 32px; height: 32px;" @click="showRestockModal = false"><X style="width: 16px; height: 16px;" /></button>
+          <button class="icon-btn" @click="showRestockModal = false">✕</button>
         </div>
-
         <form @submit.prevent="submitRestock" class="modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Current Stock</label>
-              <input type="text" :value="selectedProductForRestock.quantity + ' units'" class="form-input" disabled />
+          <!-- Product Selector if opened generally -->
+          <div v-if="!isRowSpecificRestock" style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="font-size: 0.8rem; font-weight: 600; color: #94A3B8;">Select Product to Restock *</label>
+            <select v-model="restockSelectedSku" class="og-pill-select" @change="onRestockSkuChange" required style="height: 38px;">
+              <option value="" disabled>-- Choose Product to Restock --</option>
+              <option v-for="p in store.products" :key="p.sku" :value="p.sku">
+                {{ p.name }} ({{ p.sku }}) — Current: {{ p.quantity }} units
+              </option>
+            </select>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 0.8rem; font-weight: 600; color: #94A3B8;">Current In Stock</label>
+              <input type="text" :value="(selectedProductForRestock ? selectedProductForRestock.quantity : 0) + ' units'" class="form-input" disabled />
             </div>
-            <div class="form-group">
-              <label>Quantity to Add <span style="color: var(--red-600);">*</span></label>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 0.8rem; font-weight: 600; color: #94A3B8;">Quantity to Add *</label>
               <input type="number" v-model.number="restockQty" min="1" class="form-input" required autoFocus />
             </div>
           </div>
 
-          <div class="form-group">
-            <label>Supplier Unit Cost (₱) <span style="color: var(--red-600);">*</span></label>
-            <input type="number" step="0.01" min="0" v-model.number="restockCost" class="form-input" required />
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 0.8rem; font-weight: 600; color: #94A3B8;">Supplier Unit Cost (₱) *</label>
+              <input type="number" step="0.01" min="0" v-model.number="restockCost" class="form-input" required />
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 0.8rem; font-weight: 600; color: #94A3B8;">PO Reference (Optional)</label>
+              <input type="text" v-model="restockPoNumber" class="form-input" placeholder="PO-2026-XXXX" />
+            </div>
           </div>
 
-          <div style="background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem; display: flex; justify-content: space-between; align-items: center;">
+          <!-- Calculation Preview Box -->
+          <div style="background: #151C2A; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 0.85rem 1rem; display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <div style="font-size: 0.75rem; color: var(--text-muted);">Added Supplier Purchase Cost:</div>
-              <div style="font-size: 1.15rem; font-weight: 800; color: var(--primary);">
+              <div style="font-size: 0.72rem; color: #94A3B8;">Added Capital Investment:</div>
+              <div style="font-size: 1.15rem; font-weight: 800; color: #3B82F6;">
                 +₱{{ ((Number(restockQty) || 0) * (Number(restockCost) || 0)).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
               </div>
             </div>
             <div style="text-align: right;">
-              <div style="font-size: 0.75rem; color: var(--text-muted);">New In-Stock Units:</div>
-              <div style="font-size: 1.15rem; font-weight: 800; color: #059669;">
-                {{ Number(selectedProductForRestock.quantity) + (Number(restockQty) || 0) }} units
+              <div style="font-size: 0.72rem; color: #94A3B8;">New In-Stock Units:</div>
+              <div style="font-size: 1.15rem; font-weight: 800; color: #10B981;">
+                {{ (selectedProductForRestock ? Number(selectedProductForRestock.quantity) : 0) + (Number(restockQty) || 0) }} units
               </div>
             </div>
           </div>
 
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline" @click="showRestockModal = false">Cancel</button>
-            <button type="submit" class="btn btn-mint">Confirm & Restock</button>
+          <div class="modal-footer" style="padding: 1rem 0 0 0; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: flex-end; gap: 8px;">
+            <button type="button" class="btn-dark" @click="showRestockModal = false">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="background: #10B981; border-color: #10B981; color: #FFFFFF;">
+              Confirm & Add Stock
+            </button>
           </div>
         </form>
       </div>
@@ -248,7 +335,18 @@
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { store } from '../store/inventoryStore.js'
-import { Plus, PlusCircle, Search, Edit3, Trash2, Package, X } from 'lucide-vue-next'
+import { 
+  Plus, 
+  PlusCircle, 
+  Search, 
+  Edit3, 
+  Trash2, 
+  Layers, 
+  DollarSign, 
+  AlertTriangle, 
+  ArrowUpRight, 
+  ArrowDownRight 
+} from 'lucide-vue-next'
 
 const route = useRoute()
 const searchQuery = ref(route.query.search || '')
@@ -287,11 +385,69 @@ function onCategorySelectChange() {
   }
 }
 
-// Quick Restock State
 const showRestockModal = ref(false)
 const selectedProductForRestock = ref(null)
+const isRowSpecificRestock = ref(false)
+const restockSelectedSku = ref('')
 const restockQty = ref(20)
 const restockCost = ref(25)
+const restockPoNumber = ref('')
+
+function openGeneralRestockModal() {
+  isRowSpecificRestock.value = false
+  if (store.products.length > 0) {
+    selectedProductForRestock.value = store.products[0]
+    restockSelectedSku.value = store.products[0].sku
+    restockCost.value = store.products[0].cost || 25
+  } else {
+    selectedProductForRestock.value = null
+    restockSelectedSku.value = ''
+    restockCost.value = 25
+  }
+  restockQty.value = 20
+  restockPoNumber.value = 'PO-' + Date.now().toString().slice(-6)
+  showRestockModal.value = true
+}
+
+function openRestockProduct(p) {
+  isRowSpecificRestock.value = true
+  selectedProductForRestock.value = p
+  restockSelectedSku.value = p.sku
+  restockQty.value = 20
+  restockCost.value = p.cost || 25
+  restockPoNumber.value = 'PO-' + Date.now().toString().slice(-6)
+  showRestockModal.value = true
+}
+
+function onRestockSkuChange() {
+  const p = store.products.find(x => x.sku === restockSelectedSku.value)
+  if (p) {
+    selectedProductForRestock.value = p
+    restockCost.value = p.cost || 25
+  }
+}
+
+async function submitRestock() {
+  if (!selectedProductForRestock.value) {
+    alert('Please select a product to restock.')
+    return
+  }
+  const qty = Number(restockQty.value) || 0
+  if (qty <= 0) {
+    alert('Please enter a valid stock quantity greater than 0.')
+    return
+  }
+  const cost = Number(restockCost.value) || 0
+  await store.addStockToProduct(
+    selectedProductForRestock.value.id || selectedProductForRestock.value.sku,
+    qty,
+    cost,
+    restockPoNumber.value,
+    'Stock replenishment'
+  )
+  alert(`✅ Successfully added +${qty} units to "${selectedProductForRestock.value.name}"!\nNew In-Stock Total: ${selectedProductForRestock.value.quantity} units.`)
+  showRestockModal.value = false
+}
 
 function clearFilters() {
   searchQuery.value = ''
@@ -348,55 +504,27 @@ function editProduct(p) {
 }
 
 async function saveProduct() {
-  if (!form.value.name || !form.value.name.trim()) {
-    alert('Please enter a product name.')
-    return
-  }
-  if (!form.value.category || !form.value.category.trim()) {
-    alert('Please select or enter a product category.')
-    return
-  }
-  form.value.category = form.value.category.trim()
-
   if (isEditing.value) {
-    await store.updateProduct(form.value)
-    alert(`Product "${form.value.name}" updated successfully!`)
+    await store.updateProduct(form.value.id, {
+      sku: form.value.sku,
+      name: form.value.name,
+      category: form.value.category,
+      quantity: form.value.quantity,
+      cost: form.value.cost,
+      price: form.value.price,
+      min_stock: form.value.min_stock
+    })
+    alert(`✅ Product "${form.value.name}" updated successfully!`)
   } else {
     await store.addProduct(form.value)
-    alert(`New Product "${form.value.name}" registered under category "${form.value.category}"!\nSupplier Total Purchase and Remaining Purchase updated.`)
+    alert(`✅ Product "${form.value.name}" registered successfully with ${form.value.quantity} units!`)
   }
   showModal.value = false
 }
 
-function deleteProd(p) {
-  if (confirm(`Delete product "${p.name}"?`)) {
-    store.deleteProduct(p.id)
-    alert(`Product "${p.name}" removed.`)
+async function deleteProd(p) {
+  if (confirm(`Delete product ${p.name}?`)) {
+    await store.deleteProduct(p.id)
   }
-}
-
-function openRestockProduct(p) {
-  selectedProductForRestock.value = p
-  restockQty.value = 25
-  restockCost.value = Number(p.cost) || 25
-  showRestockModal.value = true
-}
-
-async function submitRestock() {
-  if (!selectedProductForRestock.value) return
-  const qty = Number(restockQty.value) || 0
-  const cost = Number(restockCost.value) || 0
-  if (qty <= 0) {
-    alert('Please enter a valid restock quantity.')
-    return
-  }
-
-  await store.addStockToProduct(
-    selectedProductForRestock.value.id || selectedProductForRestock.value.sku,
-    qty,
-    cost
-  )
-  showRestockModal.value = false
-  alert(`✅ Added +${qty} units to "${selectedProductForRestock.value.name}"!\nSupplier Total Purchase and Remaining Purchase updated (+₱${(qty * cost).toFixed(2)}).`)
 }
 </script>

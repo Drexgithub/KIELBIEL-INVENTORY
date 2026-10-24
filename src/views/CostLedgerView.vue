@@ -1,13 +1,15 @@
 <template>
-  <div class="content">
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">Product Costing & COGS Ledger</h1>
-        <p class="page-description">Input product purchase costs (capital), monitor profit margins, and track net sales revenue.</p>
+  <div class="og-cost-page">
+    <div class="og-page-header">
+      <div class="og-page-title-box">
+        <h1 class="og-page-title">Cost Ledger & Margins</h1>
+        <p class="og-page-subtitle">Product purchase capital costs, profit margins per unit, and net revenue calculations.</p>
       </div>
-      <div class="date-picker-pill">
-        <DollarSign style="width: 14px; height: 14px; color: var(--primary);" />
-        <span>Net Profit Margin: {{ averageMargin.toFixed(1) }}%</span>
+      <div class="og-header-actions">
+        <div class="og-badge active" style="padding: 6px 14px; font-size: 0.8rem;">
+          <DollarSign style="width: 14px; height: 14px; color: #10B981;" />
+          <span>Average Margin: {{ averageMargin.toFixed(1) }}%</span>
+        </div>
       </div>
     </div>
 

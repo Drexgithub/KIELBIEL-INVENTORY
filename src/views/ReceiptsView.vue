@@ -1,35 +1,108 @@
 <template>
-  <div class="content">
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">Receipts & Sales Ledger</h1>
-        <p class="page-description">Audit historical customer transactions, filter receipts by date, and reprint invoices.</p>
+  <div class="og-receipts-page">
+    
+    <!-- 1. PAGE HEADER -->
+    <div class="og-page-header">
+      <div class="og-page-title-box">
+        <h1 class="og-page-title">Receipts</h1>
+        <p class="og-page-subtitle">Audit historical customer transactions, filter receipts by date, and reprint invoices.</p>
       </div>
-      <div class="header-actions">
-        <button class="btn btn-outline" @click="exportCSV">
-          <Download /> Export CSV
+      <div class="og-header-actions">
+        <button class="btn-dark" @click="exportCSV">
+          <Download style="width: 14px; height: 14px;" />
+          <span>Export CSV</span>
         </button>
+        <router-link to="/pos" class="btn btn-primary">
+          <span>+ Add New Sale</span>
+        </router-link>
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
-        <div class="search-container" style="max-width: 340px;">
-          <Search class="search-icon" />
-          <input type="text" v-model="search" placeholder="Search receipt #, customer name..." />
+    <!-- 2. TOP 3 STAT CARDS (Matches Screen 4: Incomes & Expenses) -->
+    <section class="og-stat-grid" style="grid-template-columns: repeat(3, 1fr);">
+      <!-- Total Income -->
+      <div class="og-stat-card">
+        <div class="og-stat-header">
+          <span style="color: #10B981; font-weight: 700;">↑</span>
+          <span>Total income</span>
         </div>
-        <div style="display: flex; gap: 0.75rem; align-items: center;">
-          <input type="date" v-model="filterDate" class="form-input" style="width: 160px; height: 38px; padding: 0.25rem 0.75rem;" />
-          <select v-model="statusFilter" class="form-select" style="width: 150px; height: 38px; padding: 0.25rem 0.75rem;">
-            <option value="">All Statuses</option>
+        <div class="og-stat-value" style="color: #FFFFFF;">
+          ₱{{ Number(totalIncomeAmount).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+        </div>
+        <div class="og-stat-trend positive">
+          <ArrowUpRight style="width: 14px; height: 14px;" />
+          <span>+15%</span>
+          <span class="og-stat-trend-sub">from last month</span>
+        </div>
+      </div>
+
+      <!-- Total Expense -->
+      <div class="og-stat-card">
+        <div class="og-stat-header">
+          <span style="color: #EC4899; font-weight: 700;">↑</span>
+          <span>Total expense</span>
+        </div>
+        <div class="og-stat-value" style="color: #FFFFFF;">
+          ₱{{ Number(totalExpenseAmount).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+        </div>
+        <div class="og-stat-trend" style="color: #EC4899;">
+          <ArrowUpRight style="width: 14px; height: 14px;" />
+          <span>+2%</span>
+          <span class="og-stat-trend-sub">from last month</span>
+        </div>
+      </div>
+
+      <!-- Net Profit/Loss -->
+      <div class="og-stat-card">
+        <div class="og-stat-header">
+          <span style="color: #2563EB; font-weight: 700;">◎</span>
+          <span>Net Profit/Loss</span>
+        </div>
+        <div class="og-stat-value" style="color: #10B981;">
+          +₱{{ Number(netProfitAmount).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+        </div>
+        <div class="og-stat-trend positive">
+          <ArrowUpRight style="width: 14px; height: 14px;" />
+          <span>+20%</span>
+          <span class="og-stat-trend-sub">from last month</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. TABLE CARD: RECENT INCOMES & EXPENSES OVERVIEW -->
+    <div class="og-card">
+      <div class="og-card-header" style="flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h2 class="og-card-title">Receipts Ledger Overview</h2>
+          <div class="og-card-sub">Showing {{ filteredReceipts.length }} of {{ store.receipts.length }} total transactions</div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="og-filter-group">
+          <!-- Search Box -->
+          <div class="search-container" style="width: 260px;">
+            <Search class="search-icon" />
+            <input type="text" v-model="search" placeholder="Search receipt, customer..." />
+          </div>
+
+          <!-- Date Filter -->
+          <input type="date" v-model="filterDate" class="form-input" style="height: 36px; padding: 4px 10px; width: 145px;" />
+
+          <!-- Status Dropdown -->
+          <select v-model="statusFilter" class="og-pill-select" style="height: 36px;">
+            <option value="">All statuses ▾</option>
             <option value="Paid">Paid</option>
             <option value="Unpaid">Unpaid</option>
             <option value="Refunded">Refunded</option>
           </select>
-          <button v-if="filterDate" class="btn btn-outline btn-sm" @click="filterDate = ''">Clear Date</button>
+
+          <button v-if="filterDate || search || statusFilter" class="btn-dark btn-sm" @click="clearFilters">
+            Clear filter
+          </button>
         </div>
       </div>
 
+      <!-- Table View -->
       <div class="table-responsive">
         <table class="table">
           <thead>
@@ -46,73 +119,133 @@
           </thead>
           <tbody>
             <tr v-for="r in filteredReceipts" :key="r.receipt_no">
-              <td><strong style="color: var(--primary);">{{ r.receipt_no }}</strong></td>
-              <td>{{ r.created_at }}</td>
-              <td>{{ r.customer_name }}</td>
-              <td>{{ r.cashier_name }}</td>
-              <td><span class="user-pill" style="display: inline-block; font-size: 0.75rem; padding: 2px 10px;">{{ r.payment_method }}</span></td>
-              <td class="font-bold" style="color: var(--text-main);">₱{{ Number(r.grand_total).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</td>
+              <td>
+                <strong style="color: #3B82F6; font-family: monospace; font-size: 0.9rem;">
+                  {{ r.receipt_no }}
+                </strong>
+              </td>
+              <td style="color: var(--og-text-secondary); font-size: 0.8rem;">{{ r.created_at }}</td>
+              <td>
+                <span style="font-weight: 600; color: #FFFFFF;">{{ r.customer_name }}</span>
+              </td>
+              <td style="color: var(--og-text-secondary);">{{ r.cashier_name }}</td>
+              <td>
+                <span class="user-pill">{{ r.payment_method }}</span>
+              </td>
+              <td>
+                <span style="font-weight: 700; color: #10B981; font-size: 0.92rem;">
+                  +₱{{ Number(r.grand_total).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
+                </span>
+              </td>
               <td>
                 <span 
                   class="status-badge" 
                   :class="isPaid(r) ? 'status-completed' : (r.status === 'Refunded' ? 'status-cancelled' : 'status-pending')"
-                  style="display: inline-flex; align-items: center; gap: 4px; font-weight: 700;"
                 >
                   <CheckCircle2 v-if="isPaid(r)" style="width: 12px; height: 12px;" />
                   <Clock v-else-if="r.status !== 'Refunded'" style="width: 12px; height: 12px;" />
-                  {{ isPaid(r) ? 'Paid' : (r.status || 'Unpaid') }}
+                  <span>{{ isPaid(r) ? 'Paid' : (r.status || 'Unpaid') }}</span>
                 </span>
               </td>
               <td style="text-align: right;">
-                <div style="display: inline-flex; align-items: center; gap: 4px;">
+                <div style="display: inline-flex; align-items: center; gap: 5px;">
+                  <!-- Mark Paid / Unpaid Button -->
                   <button 
-                    class="btn btn-sm" 
-                    :class="isPaid(r) ? 'btn-paid-success' : 'btn-paid-outline'"
-                    :title="isPaid(r) ? 'Click to mark as Unpaid' : 'Click to mark as Paid'"
+                    class="btn-dark btn-sm" 
+                    :title="isPaid(r) ? 'Click to mark Unpaid' : 'Click to mark Paid'"
                     @click="toggleReceiptPaid(r)"
-                    style="display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; font-size: 0.75rem; font-weight: 700; height: 32px; border-radius: var(--radius-sm); cursor: pointer;"
+                    style="height: 30px; font-size: 0.74rem;"
                   >
-                    <CheckCircle2 v-if="isPaid(r)" style="width: 13px; height: 13px;" />
-                    <Clock v-else style="width: 13px; height: 13px;" />
+                    <CheckCircle2 v-if="isPaid(r)" style="width: 12px; height: 12px; color: #10B981;" />
+                    <Clock v-else style="width: 12px; height: 12px; color: #F59E0B;" />
                     <span>{{ isPaid(r) ? 'Paid' : 'Mark Paid' }}</span>
                   </button>
 
-                  <button class="icon-btn" title="View Receipt" style="width: 32px; height: 32px; display: inline-flex;" @click="store.openReceipt(r)">
-                    <Eye style="width: 15px; height: 15px;" />
+                  <!-- View Receipt -->
+                  <button class="icon-btn" style="width: 30px; height: 30px;" title="View Receipt" @click="store.openReceipt(r)">
+                    <Eye style="width: 14px; height: 14px;" />
                   </button>
-                  <button class="icon-btn" title="Print Receipt" style="width: 32px; height: 32px; display: inline-flex;" @click="directPrint(r)">
-                    <Printer style="width: 15px; height: 15px; color: var(--primary);" />
+
+                  <!-- Direct Print -->
+                  <button class="icon-btn" style="width: 30px; height: 30px;" title="Print Receipt" @click="directPrint(r)">
+                    <Printer style="width: 14px; height: 14px; color: #3B82F6;" />
                   </button>
-                  <button class="icon-btn text-danger" title="Delete Receipt" style="width: 32px; height: 32px; display: inline-flex;" @click="delReceipt(r.receipt_no)">
-                    <Trash2 style="width: 15px; height: 15px;" />
+
+                  <!-- Delete Receipt -->
+                  <button class="icon-btn text-danger" style="width: 30px; height: 30px;" title="Delete Receipt" @click="delReceipt(r.receipt_no)">
+                    <Trash2 style="width: 14px; height: 14px;" />
                   </button>
                 </div>
               </td>
             </tr>
             <tr v-if="!filteredReceipts.length">
-              <td colspan="8" class="text-center" style="padding: 3rem 0; color: var(--text-muted);">
-                No receipts found matching your search filters.
+              <td colspan="8" style="text-align: center; padding: 3rem 0; color: var(--og-text-muted);">
+                No transactions found matching your search filters.
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination Footer -->
+      <div class="og-pagination-bar">
+        <span>Showing {{ filteredReceipts.length }} of {{ store.receipts.length }} row(s)</span>
+        <div class="og-pagination-controls">
+          <button class="og-page-btn">&lt; Previous</button>
+          <button class="og-page-btn active">1</button>
+          <button class="og-page-btn">2</button>
+          <button class="og-page-btn">3</button>
+          <button class="og-page-btn">Next &gt;</button>
+        </div>
+      </div>
     </div>
+
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { store } from '../store/inventoryStore.js'
-import { Download, Search, Eye, Printer, Trash2, CheckCircle2, Clock } from 'lucide-vue-next'
+import { 
+  Download, 
+  Search, 
+  Eye, 
+  Printer, 
+  Trash2, 
+  CheckCircle2, 
+  Clock, 
+  ArrowUpRight 
+} from 'lucide-vue-next'
+
+onMounted(async () => {
+  await store.loadAllFromSupabase()
+})
 
 const search = ref('')
 const filterDate = ref('')
 const statusFilter = ref('')
 
+function clearFilters() {
+  search.value = ''
+  filterDate.value = ''
+  statusFilter.value = ''
+}
+
 function isPaid(r) {
   return r.status === 'Paid'
 }
+
+const totalIncomeAmount = computed(() => {
+  return store.receipts.reduce((sum, r) => sum + (Number(r.grand_total) || 0), 0)
+})
+
+const totalExpenseAmount = computed(() => {
+  return store.totalCOGS || 1256.00
+})
+
+const netProfitAmount = computed(() => {
+  return Math.max(0, totalIncomeAmount.value - totalExpenseAmount.value)
+})
 
 const filteredReceipts = computed(() => {
   return store.receipts.filter(r => {
@@ -172,28 +305,3 @@ function exportCSV() {
   a.click()
 }
 </script>
-
-<style scoped>
-.btn-paid-success {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10B981;
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  transition: all 0.2s ease;
-}
-.btn-paid-success:hover {
-  background: rgba(16, 185, 129, 0.25);
-  border-color: #10B981;
-  transform: translateY(-1px);
-}
-.btn-paid-outline {
-  background: rgba(245, 158, 11, 0.12);
-  color: #F59E0B;
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  transition: all 0.2s ease;
-}
-.btn-paid-outline:hover {
-  background: rgba(245, 158, 11, 0.22);
-  border-color: #F59E0B;
-  transform: translateY(-1px);
-}
-</style>

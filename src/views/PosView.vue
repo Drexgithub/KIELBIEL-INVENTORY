@@ -1,14 +1,16 @@
 <template>
-  <div class="content">
+  <div class="og-pos-page">
     <!-- Header -->
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">Point of Sale</h1>
-        <p class="page-description">Process customer sales, issue receipts, and manage orders.</p>
+    <div class="og-page-header">
+      <div class="og-page-title-box">
+        <h1 class="og-page-title">POS</h1>
+        <p class="og-page-subtitle">Process customer sales, barcode order entries, checkout receipts, and instant invoices.</p>
       </div>
-      <div class="date-picker-pill">
-        <User style="width: 14px; height: 14px;" />
-        <span>Cashier: {{ store.currentUser.name }}</span>
+      <div class="og-header-actions">
+        <div class="og-badge active" style="padding: 6px 14px; font-size: 0.8rem;">
+          <User style="width: 14px; height: 14px;" />
+          <span>Cashier: {{ store.currentUser.name || 'Kiel Hedrix' }}</span>
+        </div>
       </div>
     </div>
 
@@ -309,8 +311,9 @@ function handleClickOutside(event) {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
+  await store.loadAllFromSupabase()
 })
 
 onUnmounted(() => {
@@ -463,18 +466,19 @@ function handleSearchEnter() {
   }
 }
 
-function processCheckout() {
+async function processCheckout() {
   if (!cart.value.length) return
 
-  const receiptNo = 'REC-2026-00' + (store.receipts.length + 1)
-  const invoiceNo = 'INV-' + (1020 + store.receipts.length + 1)
-  const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 19)
+  const nextNumbers = store.generateNextReceiptNumbers()
+  const receiptNo = nextNumbers.receipt_no
+  const invoiceNo = nextNumbers.invoice_no
+  const nowStr = new Date().toLocaleString()
 
   const newReceipt = {
     receipt_no: receiptNo,
     invoice_no: invoiceNo,
     customer_name: customerName.value.trim() || 'Walk-in Customer',
-    cashier_name: store.currentUser.name,
+    cashier_name: store.currentUser.name || 'Admin User',
     payment_method: paymentMethod.value || 'Cash',
     subtotal: subtotal.value,
     discount: discountAmount.value,
@@ -497,7 +501,7 @@ function processCheckout() {
     selectedCust.totalOrders = (Number(selectedCust.totalOrders) || 0) + 1
   }
 
-  store.addReceipt(newReceipt)
+  await store.addReceipt(newReceipt)
   store.openReceipt(newReceipt)
   resetPos()
 }

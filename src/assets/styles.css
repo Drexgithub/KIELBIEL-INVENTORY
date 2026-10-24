@@ -8,11 +8,11 @@
     --primary: #2563EB;
     --primary-hover: #1D4ED8;
     --primary-light: #EFF6FF;
-    --surface: #FFFFFF;
-    --bg-main: #F3F4F6;
-    --border: #E5E7EB;
-    --text-main: #111827;
-    --text-muted: #6B7280;
+    --surface: #111622;
+    --bg-main: #080B11;
+    --border: rgba(255, 255, 255, 0.08);
+    --text-main: #FFFFFF;
+    --text-muted: #94A3B8;
 
     --blue-100: #DBEAFE;
     --blue-600: #2563EB;
@@ -356,15 +356,15 @@ input, select { font-family: inherit; }
 }
 
 .modal-card {
-    background: #FFFFFF !important;
-    color: #111827 !important;
+    background: #111622 !important;
+    color: #F8FAFC !important;
     width: 100%;
-    max-width: 540px;
+    max-width: 560px;
     max-height: 90vh;
     overflow-y: auto;
     border-radius: 1rem;
-    border: 1px solid #CBD5E1 !important;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
     padding: 1.75rem;
     position: relative;
     animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -381,7 +381,7 @@ input, select { font-family: inherit; }
     justify-content: space-between;
     padding-bottom: 1rem;
     margin-bottom: 1.25rem;
-    border-bottom: 1px solid #E2E8F0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 .modal-header h2, 
@@ -390,9 +390,22 @@ input, select { font-family: inherit; }
 .modal-header span {
     font-size: 1.15rem;
     font-weight: 800;
-    color: #0F172A !important;
+    color: #FFFFFF !important;
     letter-spacing: -0.3px;
     margin: 0;
+}
+
+.modal-header .icon-btn {
+    color: #94A3B8 !important;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.modal-header .icon-btn:hover {
+    color: #FFFFFF !important;
+    background: rgba(255, 255, 255, 0.12);
 }
 
 .modal-body {
@@ -405,7 +418,7 @@ input, select { font-family: inherit; }
 .modal-card label {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #334155 !important;
+    color: #94A3B8 !important;
     margin-bottom: 0.35rem;
     display: block;
 }
@@ -416,21 +429,38 @@ input, select { font-family: inherit; }
     width: 100%;
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;
-    border: 1px solid #CBD5E1 !important;
-    background-color: #F8FAFC !important;
-    color: #0F172A !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background-color: #151C2A !important;
+    color: #FFFFFF !important;
     font-size: 0.9rem;
     font-family: inherit;
     outline: none;
     transition: all 0.2s ease;
 }
 
+.modal-card input::placeholder,
+.modal-card textarea::placeholder {
+    color: #64748B !important;
+}
+
 .modal-card input:focus, 
 .modal-card select:focus, 
 .modal-card textarea:focus {
-    border-color: #2563EB !important;
-    background-color: #FFFFFF !important;
-    box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.15) !important;
+    border-color: #3B82F6 !important;
+    background-color: #0F172A !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25) !important;
+}
+
+.modal-card input:disabled {
+    background-color: #0A0E17 !important;
+    color: #64748B !important;
+    border-color: rgba(255, 255, 255, 0.06) !important;
+    cursor: not-allowed;
+}
+
+.modal-card select option {
+    background-color: #151C2A !important;
+    color: #FFFFFF !important;
 }
 
 .modal-footer {
@@ -440,7 +470,7 @@ input, select { font-family: inherit; }
     gap: 0.75rem;
     padding-top: 1.25rem;
     margin-top: 1.5rem;
-    border-top: 1px solid #E2E8F0 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 .receipt-card {
@@ -590,6 +620,10 @@ input, select { font-family: inherit; }
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right 1rem center;
     background-size: 1rem; cursor: pointer;
+}
+.form-select option {
+    background-color: #111622;
+    color: #FFFFFF;
 }
 .form-row { display: flex; gap: 1.5rem; }
 .form-row > * { flex: 1; }

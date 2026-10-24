@@ -2328,6 +2328,10 @@
                         }
                     }
                 } catch (e) { }
+
+                // Auto-load data from Supabase if connected
+                if (typeof loadReceiptsFromDB === 'function') loadReceiptsFromDB();
+                if (typeof loadProductsFromDB === 'function') loadProductsFromDB();
             });
 
             const receiptData = {
@@ -2849,12 +2853,50 @@
                 calcPosTotals();
             }
 
-            function generateNewReceipt() {
+            async function generateNewReceipt() {
                 const customer = document.getElementById('posCustomer').value.trim() || 'Guest Customer';
-                const invNo = document.getElementById('posInvNo').value.trim() || ('INV-' + (1028 + nextRecNum));
-                const cashier = document.getElementById('posCashier').value;
-                const payMethod = document.getElementById('posPayMethod').value;
+                const cashier = document.getElementById('posCashier').value || 'Admin User';
+                const payMethod = document.getElementById('posPayMethod').value || 'Cash';
                 const dateStr = document.getElementById('posDate').value;
+
+                // Query Supabase directly for guaranteed unique next sequence
+                if (supabaseClient) {
+                    try {
+                        const { data: allDbRecs } = await supabaseClient.from('receipts').select('receipt_no, invoice_no');
+                        if (allDbRecs) {
+                            let maxR = 0;
+                            let maxI = 1020;
+                            allDbRecs.forEach(r => {
+                                const rm = (r.receipt_no || '').match(/(\d+)$/);
+                                if (rm) {
+                                    const n = parseInt(rm[1], 10);
+                                    if (n > maxR) maxR = n;
+                                }
+                                const im = (r.invoice_no || '').match(/(\d+)$/);
+                                if (im) {
+                                    const n = parseInt(im[1], 10);
+                                    if (n > maxI) maxI = n;
+                                }
+                            });
+                            nextRecNum = maxR + 1;
+                        }
+                    } catch (e) {
+                        console.warn('Could not query database max sequence:', e);
+                    }
+                }
+
+                // Ensure nextRecNum is always greater than any existing receipt in receiptData
+                for (let k in receiptData) {
+                    const rm = k.match(/(\d+)$/);
+                    if (rm) {
+                        const n = parseInt(rm[1], 10);
+                        if (n >= nextRecNum) nextRecNum = n + 1;
+                    }
+                }
+
+                const recId = 'REC-2026-00' + nextRecNum;
+                const invNo = document.getElementById('posInvNo').value.trim() || ('INV-' + (1020 + nextRecNum));
+                nextRecNum++;
 
                 const subtotal = document.getElementById('posSubtotalTxt').innerText;
                 const discount = document.getElementById('posDiscountTxt').innerText;
@@ -2872,9 +2914,7 @@
                     items.push({ desc, qty, price, total });
                 });
 
-                const recId = 'REC-2026-00' + nextRecNum;
                 const barcode = recId + '00' + Math.floor(1000 + Math.random() * 9000);
-                nextRecNum++;
 
                 // Save into receiptData map
                 receiptData[recId] = {
@@ -2927,7 +2967,7 @@
                         discount: parseFloat(discount.replace(/[^0-9.-]+/g, '')) || 0,
                         tax: parseFloat(tax.replace(/[^0-9.-]+/g, '')) || 0,
                         grand_total: parseFloat(grand.replace(/[^0-9.-]+/g, '')) || 0,
-                        created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                        created_at: new Date().toISOString(),
                         status: 'Completed'
                     }]).select().then(({ data, error }) => {
                         if (!error && data && data[0]) {
@@ -2938,12 +2978,14 @@
                                 unit_price: parseFloat(it.price.replace(/[^0-9.-]+/g, '')) || 0,
                                 line_total: parseFloat(it.total.replace(/[^0-9.-]+/g, '')) || 0
                             }));
-                            supabaseClient.from('receipt_items').insert(itemsPayload).then(() => {
+                            supabaseClient.from('receipt_items').insert(itemsPayload).then(({ error: itemsErr }) => {
+                                if (itemsErr) console.error('Error saving receipt items:', itemsErr);
                                 console.log('Saved to Supabase successfully!');
                                 loadReceiptsFromDB();
                             });
                         } else {
                             console.error('Supabase error:', error);
+                            alert('⚠️ Warning: Could not save receipt to Supabase cloud database:\n' + (error ? error.message : 'Unknown error'));
                         }
                     });
                 } else {
@@ -3055,6 +3097,18 @@
                     if (supabaseClient) {
                         const { data: recs, error } = await supabaseClient.from('receipts').select('*, receipt_items(*)').order('created_at', { ascending: false });
                         if (!error && recs) {
+                            let maxR = 0;
+                            recs.forEach(rec => {
+                                const rm = (rec.receipt_no || '').match(/(\d+)$/);
+                                if (rm) {
+                                    const n = parseInt(rm[1], 10);
+                                    if (n > maxR) maxR = n;
+                                }
+                            });
+                            if (maxR >= nextRecNum) {
+                                nextRecNum = maxR + 1;
+                            }
+
                             const tbody = document.getElementById('receiptsTableBody');
                             if (tbody) tbody.innerHTML = '';
                             recs.forEach(rec => {
@@ -3064,7 +3118,10 @@
                                 const cashier = rec.cashier_name;
                                 const dateStr = rec.created_at || '2026-10-26 15:00';
                                 const payMethod = rec.payment_method;
-                                const grand = '₱' + parseFloat(rec.grand_total || 0).toFixed(2);
+                                const itemsList = rec.receipt_items || [];
+                                const itemsSum = itemsList.reduce((s, it) => s + (parseFloat(it.line_total) || 0), 0);
+                                const calcGrand = itemsSum > 0 ? (itemsSum - parseFloat(rec.discount || 0) + parseFloat(rec.tax || 0)) : parseFloat(rec.grand_total || 0);
+                                const grand = '₱' + calcGrand.toFixed(2);
                                 const status = rec.status || 'Completed';
 
                                 receiptData[recNo] = {

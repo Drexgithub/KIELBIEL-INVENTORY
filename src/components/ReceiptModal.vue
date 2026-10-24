@@ -75,7 +75,7 @@
             <div class="receipt-totals-box">
               <div class="total-row">
                 <span>Subtotal:</span>
-                <span class="total-val">₱{{ Number(receipt.subtotal || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+                <span class="total-val">₱{{ Number(computedSubtotal).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
               </div>
               <div class="total-row" v-if="receipt.discount > 0">
                 <span>Discount:</span>
@@ -87,7 +87,7 @@
               </div>
               <div class="total-row grand-total">
                 <span>GRAND TOTAL:</span>
-                <span class="grand-total-val">₱{{ Number(receipt.grand_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
+                <span class="grand-total-val">₱{{ Number(computedGrandTotal).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
               </div>
             </div>
           </div>
@@ -114,7 +114,7 @@
         <button class="btn btn-outline" @click="store.closeReceipt">
           <X style="width: 16px; height: 16px;" /> Close
         </button>
-        <button class="btn btn-mint" @click="printReceipt">
+        <button class="btn btn-primary" @click="printReceipt">
           <Printer style="width: 16px; height: 16px;" /> Print Full A4 Receipt
         </button>
       </div>
@@ -129,6 +129,21 @@ import { store } from '../store/inventoryStore.js'
 import { Printer, X } from 'lucide-vue-next'
 
 const receipt = computed(() => store.activeReceiptModal || {})
+
+const computedSubtotal = computed(() => {
+  const items = receipt.value.items || []
+  if (items.length > 0) {
+    return items.reduce((sum, item) => sum + Number(item.line_total || 0), 0)
+  }
+  return Number(receipt.value.subtotal || 0)
+})
+
+const computedGrandTotal = computed(() => {
+  const sub = computedSubtotal.value
+  const disc = Number(receipt.value.discount || 0)
+  const tax = Number(receipt.value.tax || 0)
+  return Math.max(0, sub - disc + tax)
+})
 
 const customerAddress = computed(() => {
   if (receipt.value.customer_address) return receipt.value.customer_address
@@ -279,7 +294,13 @@ function printReceipt() {
 /* SCREEN MODAL STYLING                                                 */
 /* ==================================================================== */
 .receipt-card {
-  background: var(--surface);
+  background: #FFFFFF !important;
+  color: #111827 !important;
+  --text-main: #111827 !important;
+  --text-muted: #4B5563 !important;
+  --border: #E5E7EB !important;
+  --bg-main: #F3F4F6 !important;
+  --input-bg: #F9FAFB !important;
   border-radius: var(--radius-lg);
   padding: 1.25rem 1.75rem;
   max-width: 680px;
@@ -287,9 +308,8 @@ function printReceipt() {
   max-height: 90vh;
   overflow-y: auto;
   margin: auto;
-  border: 1px solid var(--border);
-  color: var(--text-main);
-  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.4);
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.7);
 }
 
 .print-page {

@@ -3,6 +3,8 @@ import App from './App.vue'
 import router from './router'
 import '../styles.css'
 import './assets/styles.css'
+import './assets/uventra.css'
+import './assets/onlygenius.css'
 
 const app = createApp(App)
 

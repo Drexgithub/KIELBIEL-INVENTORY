@@ -1,0 +1,1235 @@
+/* ======================================================== */
+/* UVENTRA DESIGN SYSTEM & COMPONENT STYLES                 */
+/* High-Fidelity UI matching the UVentra inventory template */
+/* ======================================================== */
+
+:root {
+  --uv-bg: #F4F6F9;
+  --uv-surface: #FFFFFF;
+  --uv-card-bg: #FFFFFF;
+  --uv-border: #E8EEF5;
+  --uv-border-light: #F1F5F9;
+  --uv-text: #0F172A;
+  --uv-text-muted: #8E9BAE;
+  --uv-text-subtle: #64748B;
+  --uv-tab-bg: #F0F3F8;
+  --uv-hover-bg: #F1F5F9;
+  --uv-row-bg: #F8FAFC;
+  
+  --uv-primary: #2563EB;
+  --uv-primary-gradient: linear-gradient(135deg, #0284C7 0%, #2563EB 100%);
+  --uv-cyan: #06B6D4;
+  --uv-purple: #8B5CF6;
+  --uv-green: #10B981;
+  --uv-red: #EF4444;
+  --uv-amber: #F59E0B;
+  
+  --uv-shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
+  --uv-shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.04), 0 4px 8px -2px rgba(15, 23, 42, 0.02);
+  --uv-shadow-hover: 0 16px 36px -6px rgba(15, 23, 42, 0.08), 0 6px 12px -2px rgba(15, 23, 42, 0.04);
+  --uv-tooltip-shadow: 0 12px 30px -4px rgba(15, 23, 42, 0.12), 0 4px 10px -2px rgba(15, 23, 42, 0.06);
+
+  --uv-radius-sm: 10px;
+  --uv-radius-md: 16px;
+  --uv-radius-lg: 22px;
+  --uv-radius-xl: 28px;
+  --uv-radius-pill: 9999px;
+}
+
+[data-theme='dark'],
+:root[data-theme='dark'],
+html[data-theme='dark'] {
+  --uv-bg: #0D121F;
+  --uv-surface: #141B2D;
+  --uv-card-bg: #182238;
+  --uv-border: #23304B;
+  --uv-border-light: #1D2840;
+  --uv-text: #F8FAFC;
+  --uv-text-muted: #8899AC;
+  --uv-text-subtle: #94A3B8;
+  --uv-tab-bg: #1F2B44;
+  --uv-hover-bg: #1F2B44;
+  --uv-row-bg: #1A243C;
+  
+  --surface: #141B2D;
+  --bg-main: #0D121F;
+  --border: #23304B;
+  --text-main: #F8FAFC;
+  --text-muted: #8899AC;
+  --input-bg: #1F2B44;
+
+  --uv-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --uv-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.4), 0 4px 8px -2px rgba(0, 0, 0, 0.2);
+  --uv-shadow-hover: 0 16px 36px -6px rgba(0, 0, 0, 0.6);
+  --uv-tooltip-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.6);
+}
+
+/* Base resets & typography */
+body {
+  font-family: 'Plus Jakarta Sans', 'Poppins', sans-serif !important;
+  background-color: var(--uv-bg) !important;
+  color: var(--uv-text) !important;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Outer layout frame */
+.uventra-app-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--uv-bg);
+  color: var(--uv-text);
+  overflow-x: hidden;
+}
+
+.uventra-body-layout {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  position: relative;
+}
+
+/* ======================================================== */
+/* TOP NAVIGATION BAR                                       */
+/* ======================================================== */
+.uventra-topbar {
+  height: 74px;
+  background-color: var(--uv-surface);
+  border-bottom: 1px solid var(--uv-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.uventra-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.uventra-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+
+.uventra-brand-badge {
+  width: 38px;
+  height: 38px;
+  background: var(--uv-primary-gradient);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-weight: 800;
+  font-size: 1.25rem;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  transition: transform 0.2s ease;
+}
+
+.uventra-brand:hover .uventra-brand-badge {
+  transform: scale(1.05);
+}
+
+.uventra-brand-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--uv-text);
+}
+
+.uventra-brand-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--uv-primary);
+  background: rgba(37, 99, 235, 0.1);
+  padding: 2px 7px;
+  border-radius: 999px;
+  margin-left: 2px;
+}
+
+/* Active tab pill */
+.uventra-tab-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--uv-tab-bg);
+  border: 1px solid var(--uv-border);
+  border-radius: var(--uv-radius-pill);
+  padding: 6px 14px 6px 16px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--uv-text);
+  box-shadow: var(--uv-shadow-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.uventra-tab-close {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--uv-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.uventra-tab-close:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: var(--uv-red);
+}
+
+/* Nav links in topbar */
+.uventra-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-left: 0.75rem;
+}
+
+.uventra-nav-item {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--uv-text-muted);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  padding: 6px 0;
+}
+
+.uventra-nav-item:hover,
+.uventra-nav-item.active {
+  color: var(--uv-text);
+  font-weight: 600;
+}
+
+.uventra-nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--uv-primary);
+  border-radius: 2px;
+}
+
+/* Topbar right utilities */
+.uventra-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.uventra-icon-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--uv-border);
+  background-color: var(--uv-surface);
+  color: var(--uv-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.uventra-icon-btn:hover {
+  background-color: var(--uv-hover-bg);
+  color: var(--uv-text);
+  border-color: var(--uv-text-muted);
+}
+
+.uventra-dot-badge {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--uv-red);
+  border: 2px solid var(--uv-surface);
+}
+
+/* User profile capsule */
+.uventra-user-capsule {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 12px 4px 4px;
+  border-radius: var(--uv-radius-pill);
+  border: 1px solid var(--uv-border);
+  background-color: var(--uv-surface);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.uventra-user-capsule:hover {
+  background-color: var(--uv-hover-bg);
+  border-color: var(--uv-text-muted);
+}
+
+.uventra-user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid var(--uv-primary);
+}
+
+.uventra-user-meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.uventra-user-greeting {
+  font-size: 0.68rem;
+  color: var(--uv-text-muted);
+  font-weight: 500;
+}
+
+.uventra-user-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--uv-text);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ======================================================== */
+/* LEFT VERTICAL DOCK SIDEBAR                               */
+/* ======================================================== */
+.uventra-dock {
+  width: 80px;
+  flex-shrink: 0;
+  background-color: var(--uv-surface);
+  border-right: 1px solid var(--uv-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 0 1.25rem;
+  height: calc(100vh - 74px);
+  position: sticky;
+  top: 74px;
+  z-index: 90;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Vertical Sun / Moon theme switch pill */
+.uventra-theme-pill {
+  width: 38px;
+  height: 76px;
+  background-color: #171E2D;
+  border-radius: var(--uv-radius-pill);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.uventra-theme-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7E8DA1;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.uventra-theme-btn.active {
+  background-color: #242D40;
+  color: #F8FAFC;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Navigation Icons Stack */
+.uventra-dock-icons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: 1.5rem 0;
+}
+
+.uventra-dock-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--uv-text-muted);
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.uventra-dock-btn:hover {
+  background-color: var(--uv-hover-bg);
+  color: var(--uv-primary);
+  transform: translateY(-2px);
+}
+
+.uventra-dock-btn.active {
+  background: #2563EB;
+  color: #FFFFFF;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+}
+
+/* Dock tooltip */
+.uventra-dock-tooltip {
+  position: absolute;
+  left: calc(100% + 12px);
+  background-color: #0F172A;
+  color: #FFFFFF;
+  padding: 5px 11px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 1000;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+}
+
+.uventra-dock-tooltip::before {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 5px solid transparent;
+  border-right-color: #0F172A;
+}
+
+.uventra-dock-btn:hover .uventra-dock-tooltip {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Dock bottom utilities */
+.uventra-dock-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ======================================================== */
+/* MAIN VIEWPORT & DASHBOARD COMPONENTS                     */
+/* ======================================================== */
+.uventra-main-viewport {
+  flex: 1;
+  min-height: calc(100vh - 74px);
+  background-color: var(--uv-bg);
+  padding: 2rem 2.5rem 3.5rem;
+  overflow-y: auto;
+  transition: background-color 0.3s ease;
+}
+
+/* Header Greeting & KPI grid */
+.uventra-hero-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr 1fr 1fr;
+  gap: 1.5rem;
+  align-items: stretch;
+  margin-bottom: 1.75rem;
+}
+
+.uventra-greeting-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-right: 0.5rem;
+}
+
+.uventra-greeting-title {
+  font-size: 1.95rem;
+  font-weight: 800;
+  color: var(--uv-text);
+  letter-spacing: -0.6px;
+  line-height: 1.2;
+}
+
+.uventra-greeting-sub {
+  font-size: 0.88rem;
+  color: var(--uv-text-muted);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+/* Top 3 KPI Cards */
+.uventra-kpi-card {
+  background-color: var(--uv-card-bg);
+  border: 1px solid var(--uv-border);
+  border-radius: var(--uv-radius-lg);
+  padding: 1.35rem 1.5rem;
+  box-shadow: var(--uv-shadow);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  min-height: 135px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.uventra-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--uv-shadow-hover);
+}
+
+.uventra-kpi-glow {
+  position: absolute;
+  right: -30px;
+  bottom: -30px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.12;
+  filter: blur(25px);
+}
+
+.uventra-kpi-glow.cyan { background-color: #06B6D4; }
+.uventra-kpi-glow.purple { background-color: #8B5CF6; }
+.uventra-kpi-glow.blue { background-color: #0284C7; }
+
+.uventra-kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.uventra-kpi-label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--uv-text-muted);
+}
+
+.uventra-kpi-icon-pill {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+}
+
+.uventra-kpi-icon-pill.cyan {
+  background: linear-gradient(135deg, #38BDF8, #0284C7);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+}
+
+.uventra-kpi-icon-pill.purple {
+  background: linear-gradient(135deg, #A78BFA, #7C3AED);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+}
+
+.uventra-kpi-icon-pill.blue {
+  background: linear-gradient(135deg, #06B6D4, #0891B2);
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.35);
+}
+
+.uventra-kpi-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 10px 0 4px;
+}
+
+.uventra-kpi-val {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--uv-text);
+  letter-spacing: -0.6px;
+  line-height: 1;
+}
+
+.uventra-kpi-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--uv-radius-pill);
+}
+
+.uventra-kpi-trend.positive {
+  color: #10B981;
+  background-color: rgba(16, 185, 129, 0.12);
+}
+
+.uventra-kpi-trend.negative {
+  color: #EF4444;
+  background-color: rgba(239, 68, 68, 0.12);
+}
+
+.uventra-kpi-footer {
+  font-size: 0.74rem;
+  color: var(--uv-text-muted);
+  font-weight: 500;
+}
+
+/* ======================================================== */
+/* MIDDLE ANALYTICS SECTION                                 */
+/* ======================================================== */
+.uventra-charts-grid {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.uventra-card {
+  background-color: var(--uv-card-bg);
+  border: 1px solid var(--uv-border);
+  border-radius: var(--uv-radius-xl);
+  padding: 1.5rem 1.75rem;
+  box-shadow: var(--uv-shadow);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+}
+
+.uventra-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.uventra-card-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--uv-text);
+  letter-spacing: -0.3px;
+}
+
+.uventra-card-action-btn {
+  background: none;
+  border: none;
+  color: var(--uv-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.uventra-card-action-btn:hover {
+  color: var(--uv-text);
+  background-color: var(--uv-hover-bg);
+}
+
+/* Legend in inventory statistics */
+.uventra-legend-group {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.uventra-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--uv-text-muted);
+}
+
+.uventra-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.uventra-legend-dot.yellow { background-color: #F59E0B; }
+.uventra-legend-dot.purple { background-color: #8B5CF6; }
+.uventra-legend-dot.blue { background-color: #0284C7; }
+
+.uventra-select-pill {
+  padding: 4px 12px;
+  border-radius: var(--uv-radius-pill);
+  border: 1px solid var(--uv-border);
+  background-color: var(--uv-surface);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--uv-text-muted);
+  cursor: pointer;
+  outline: none;
+}
+
+/* Custom Interactive Inventory Bar Chart */
+.uventra-chart-container {
+  position: relative;
+  width: 100%;
+  height: 290px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: 10px;
+}
+
+.uventra-chart-body {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  display: flex;
+}
+
+.uventra-y-axis {
+  width: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-bottom: 24px;
+  color: var(--uv-text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.uventra-chart-grid-area {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 1rem 24px;
+}
+
+/* Horizontal grid guide lines */
+.uventra-grid-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--uv-border-light);
+  pointer-events: none;
+}
+
+/* Month Columns */
+.uventra-month-col {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  cursor: pointer;
+}
+
+.uventra-col-track {
+  position: relative;
+  width: 44px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.uventra-col-guide-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: var(--uv-border);
+  opacity: 0.6;
+}
+
+/* Yellow and Purple marker pills */
+.uventra-marker-pill {
+  position: absolute;
+  width: 22px;
+  height: 5px;
+  border-radius: 999px;
+  z-index: 5;
+  transition: all 0.3s ease;
+}
+
+.uventra-marker-pill.yellow {
+  background-color: #F59E0B;
+}
+
+.uventra-marker-pill.purple {
+  background-color: #8B5CF6;
+}
+
+/* Active Highlighted Column (Striped Bar) */
+.uventra-striped-bar {
+  position: absolute;
+  bottom: 0;
+  width: 38px;
+  border-radius: 8px 8px 0 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(6, 182, 212, 0.45),
+    rgba(6, 182, 212, 0.45) 2px,
+    rgba(255, 255, 255, 0.8) 2px,
+    rgba(255, 255, 255, 0.8) 4px
+  );
+  border: 1.5px solid #06B6D4;
+  border-bottom: none;
+  z-index: 4;
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1), left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme='dark'] .uventra-striped-bar {
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(6, 182, 212, 0.4),
+    rgba(6, 182, 212, 0.4) 2px,
+    rgba(24, 34, 56, 0.8) 2px,
+    rgba(24, 34, 56, 0.8) 4px
+  );
+}
+
+/* Tooltip Card above Active Bar */
+.uventra-chart-tooltip {
+  position: absolute;
+  background: var(--uv-surface);
+  border-radius: 12px;
+  padding: 8px 14px;
+  box-shadow: var(--uv-tooltip-shadow);
+  border: 1px solid var(--uv-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  white-space: nowrap;
+  z-index: 20;
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: tooltipFloat 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.uventra-chart-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--uv-surface);
+}
+
+.uventra-tooltip-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.68rem;
+  color: var(--uv-text-muted);
+  font-weight: 600;
+}
+
+.uventra-tooltip-val {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--uv-text);
+  letter-spacing: -0.3px;
+  margin-top: 1px;
+}
+
+.uventra-col-label {
+  position: absolute;
+  bottom: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--uv-text-muted);
+  transition: color 0.2s ease;
+}
+
+.uventra-month-col:hover .uventra-col-label,
+.uventra-month-col.active .uventra-col-label {
+  color: var(--uv-text);
+  font-weight: 700;
+}
+
+/* Sales Overview Gauge Card */
+.uventra-gauge-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0 0.5rem;
+  position: relative;
+}
+
+.uventra-gauge-center {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.uventra-gauge-val {
+  font-size: 2.15rem;
+  font-weight: 800;
+  color: var(--uv-text);
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.uventra-gauge-sub {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--uv-text-muted);
+  margin-top: 4px;
+}
+
+.uventra-sales-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1.25rem;
+  margin-top: 1rem;
+  border-top: 1px solid var(--uv-border);
+}
+
+.uventra-sales-metric {
+  display: flex;
+  flex-direction: column;
+}
+
+.uventra-metric-title {
+  font-size: 0.78rem;
+  color: var(--uv-text-muted);
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.uventra-metric-num {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--uv-text);
+  letter-spacing: -0.3px;
+}
+
+/* ======================================================== */
+/* BOTTOM 3 COLUMNS SECTION                                 */
+/* ======================================================== */
+.uventra-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* 1. Recent Activities */
+.uventra-activities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.uventra-activity-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background-color: var(--uv-row-bg);
+  border-radius: var(--uv-radius-md);
+  border: 1px solid var(--uv-border-light);
+  transition: all 0.2s ease;
+}
+
+.uventra-activity-row:hover {
+  background-color: var(--uv-surface);
+  border-color: var(--uv-border);
+  box-shadow: var(--uv-shadow-sm);
+}
+
+.uventra-activity-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.uventra-activity-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.uventra-activity-icon.purple { background-color: rgba(139, 92, 246, 0.15); color: #8B5CF6; }
+.uventra-activity-icon.yellow { background-color: rgba(245, 158, 11, 0.15); color: #F59E0B; }
+.uventra-activity-icon.blue { background-color: rgba(37, 99, 235, 0.15); color: #2563EB; }
+.uventra-activity-icon.green { background-color: rgba(16, 185, 129, 0.15); color: #10B981; }
+
+.uventra-activity-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.uventra-activity-name {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--uv-text);
+}
+
+.uventra-activity-desc {
+  font-size: 0.74rem;
+  color: var(--uv-text-muted);
+}
+
+.uventra-activity-time {
+  font-size: 0.74rem;
+  color: var(--uv-text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 2. Alerts & Notifications */
+.uventra-alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.uventra-alert-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.15rem;
+  border-radius: var(--uv-radius-md);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.uventra-alert-card:hover {
+  transform: translateX(4px);
+}
+
+.uventra-alert-card.pink {
+  background-color: #FFF1F2;
+  border: 1px solid #FFE4E6;
+}
+[data-theme='dark'] .uventra-alert-card.pink {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.uventra-alert-card.green {
+  background-color: #F0FDF4;
+  border: 1px solid #DCFCE7;
+}
+[data-theme='dark'] .uventra-alert-card.green {
+  background-color: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.uventra-alert-card.yellow {
+  background-color: #FEFCE8;
+  border: 1px solid #FEF08A;
+}
+[data-theme='dark'] .uventra-alert-card.yellow {
+  background-color: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.uventra-alert-card.blue {
+  background-color: #F0F9FF;
+  border: 1px solid #E0F2FE;
+}
+[data-theme='dark'] .uventra-alert-card.blue {
+  background-color: rgba(2, 132, 199, 0.1);
+  border-color: rgba(2, 132, 199, 0.25);
+}
+
+.uventra-alert-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.uventra-alert-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.uventra-alert-icon.pink { background-color: rgba(239, 68, 68, 0.2); color: #EF4444; }
+.uventra-alert-icon.green { background-color: rgba(16, 185, 129, 0.2); color: #10B981; }
+.uventra-alert-icon.yellow { background-color: rgba(245, 158, 11, 0.2); color: #D97706; }
+.uventra-alert-icon.blue { background-color: rgba(2, 132, 199, 0.2); color: #0284C7; }
+
+.uventra-alert-name {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--uv-text);
+}
+
+.uventra-alert-desc {
+  font-size: 0.74rem;
+  color: var(--uv-text-muted);
+}
+
+.uventra-alert-chevron {
+  color: var(--uv-text-muted);
+  transition: transform 0.2s ease;
+}
+
+.uventra-alert-card:hover .uventra-alert-chevron {
+  transform: translateX(3px);
+  color: var(--uv-text);
+}
+
+/* 3. Top Product Recommendation */
+.uventra-products-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.uventra-product-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.5rem;
+  border-radius: var(--uv-radius-md);
+  transition: background-color 0.2s ease;
+}
+
+.uventra-product-item:hover {
+  background-color: var(--uv-row-bg);
+}
+
+.uventra-product-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.uventra-product-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  object-fit: cover;
+  background-color: var(--uv-surface);
+  border: 1px solid var(--uv-border);
+  box-shadow: var(--uv-shadow-sm);
+}
+
+.uventra-product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.uventra-product-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--uv-text);
+}
+
+.uventra-product-sku {
+  font-size: 0.72rem;
+  color: var(--uv-text-muted);
+  font-weight: 500;
+}
+
+.uventra-product-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.uventra-product-price {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--uv-text);
+}
+
+.uventra-product-orders {
+  font-size: 0.72rem;
+  color: var(--uv-text-muted);
+  font-weight: 600;
+}
+
+/* Responsive queries */
+@media (max-width: 1280px) {
+  .uventra-hero-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .uventra-greeting-box {
+    grid-column: span 2;
+    margin-bottom: 0.5rem;
+  }
+  .uventra-charts-grid {
+    grid-template-columns: 1fr;
+  }
+  .uventra-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .uventra-hero-grid {
+    grid-template-columns: 1fr;
+  }
+  .uventra-greeting-box {
+    grid-column: span 1;
+  }
+  .uventra-dock {
+    display: none;
+  }
+  .uventra-main-viewport {
+    padding: 1.25rem 1rem;
+  }
+  .uventra-nav-links {
+    display: none;
+  }
+}

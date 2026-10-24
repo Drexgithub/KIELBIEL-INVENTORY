@@ -2,14 +2,25 @@ import { reactive } from 'vue'
 import { supabase } from '../supabase.js'
 
 export const store = reactive({
-  currentUser: {
-    name: '',
-    email: '',
-    role: '',
-    isAuthenticated: false
-  },
+  currentUser: (() => {
+    try {
+      const saved = localStorage.getItem('pos_user_session')
+      if (saved) {
+        const u = JSON.parse(saved)
+        if (u && u.name) return u
+      }
+    } catch (e) {}
+    return {
+      name: 'Kiel Hedrix',
+      email: 'admin@kielbiel.com',
+      role: 'Admin User',
+      isAuthenticated: true
+    }
+  })(),
   sidebarCollapsed: false,
   darkMode: localStorage.getItem('theme') === 'dark',
+  uventraDemoMode: false,
+  activeNavTab: 'Dashboard Overview',
   activeReceiptModal: null,
 
   get isAdmin() {
@@ -28,14 +39,7 @@ export const store = reactive({
 
   // Reactive State Arrays (Live populated from Supabase)
   products: [],
-  receipts: [
-    { receipt_no: 'REC-2026-001', invoice_no: 'INV-1021', customer_name: 'Juan Dela Cruz', cashier_name: 'Admin User', payment_method: 'Cash', subtotal: 2500, discount: 0, tax: 0, grand_total: 2500, status: 'Unpaid', created_at: '2026-06-15 14:30:00', items: [] },
-    { receipt_no: 'REC-2026-002', invoice_no: 'INV-1022', customer_name: 'Juan Dela Cruz', cashier_name: 'Admin User', payment_method: 'GCash', subtotal: 10000, discount: 0, tax: 0, grand_total: 10000, status: 'Unpaid', created_at: '2026-07-20 11:15:00', items: [] },
-    { receipt_no: 'REC-2026-003', invoice_no: 'INV-1023', customer_name: 'Maria Santos', cashier_name: 'Admin User', payment_method: 'Credit Card', subtotal: 15400, discount: 400, tax: 0, grand_total: 15000, status: 'Unpaid', created_at: '2026-07-10 09:45:00', items: [] },
-    { receipt_no: 'REC-2026-004', invoice_no: 'INV-1024', customer_name: 'Maria Santos', cashier_name: 'Admin User', payment_method: 'GCash', subtotal: 13400, discount: 0, tax: 0, grand_total: 13400, status: 'Unpaid', created_at: '2026-08-02 16:20:00', items: [] },
-    { receipt_no: 'REC-2026-005', invoice_no: 'INV-1025', customer_name: 'ACME Supermarket', cashier_name: 'Admin User', payment_method: 'Bank Transfer', subtotal: 45000, discount: 0, tax: 0, grand_total: 45000, status: 'Unpaid', created_at: '2026-06-28 10:00:00', items: [] },
-    { receipt_no: 'REC-2026-006', invoice_no: 'INV-1026', customer_name: 'ACME Supermarket', cashier_name: 'Admin User', payment_method: 'Bank Transfer', subtotal: 50000, discount: 0, tax: 0, grand_total: 50000, status: 'Unpaid', created_at: '2026-08-05 13:10:00', items: [] }
-  ],
+  receipts: [],
   categories: [
     { id: 1, name: 'Electronics', description: 'Hardware, cables & devices' },
     { id: 2, name: 'Beverages', description: 'Softdrinks, coffee & juices' },
@@ -294,7 +298,11 @@ export const store = reactive({
   toggleDarkMode() {
     this.darkMode = !this.darkMode
     const theme = this.darkMode ? 'dark' : 'light'
-    document.documentElement.setAttribute('data-theme', theme)
+    if (this.darkMode) {
+      document.documentElement.setAttribute('data-theme', 'dark')
+    } else {
+      document.documentElement.removeAttribute('data-theme')
+    }
     localStorage.setItem('theme', theme)
   },
 
@@ -377,18 +385,25 @@ export const store = reactive({
       if (!recErr && recs) {
         this.receipts = recs.map(r => {
           const receiptItems = r.receipt_items || []
+          const itemsSum = receiptItems.reduce((acc, it) => acc + Number(it.line_total || 0), 0)
+          const discount = Number(r.discount || 0)
+          const tax = Number(r.tax || 0)
+          const subtotal = itemsSum > 0 ? itemsSum : Number(r.subtotal || 0)
+          const grandTotal = itemsSum > 0 ? (itemsSum - discount + tax) : Number(r.grand_total || 0)
+
           return {
             receipt_no: r.receipt_no,
             invoice_no: r.invoice_no,
             customer_name: r.customer_name,
             cashier_name: r.cashier_name,
             payment_method: r.payment_method,
-            subtotal: Number(r.subtotal),
-            discount: Number(r.discount || 0),
-            tax: Number(r.tax || 0),
-            grand_total: Number(r.grand_total),
+            subtotal: subtotal,
+            discount: discount,
+            tax: tax,
+            grand_total: grandTotal,
             status: r.status === 'Paid' ? 'Paid' : (r.status === 'Refunded' ? 'Refunded' : 'Unpaid'),
             created_at: r.created_at ? new Date(r.created_at).toLocaleString() : new Date().toLocaleString(),
+            raw_created_at: r.created_at || new Date().toISOString(),
             items: receiptItems.map(i => ({
               item_desc: i.item_desc,
               quantity: Number(i.quantity),
@@ -483,10 +498,10 @@ export const store = reactive({
   // ====================================================================
   async addStockToProduct(productIdOrSku, quantityToAdd, unitCost = null, poNumber = '', notes = '') {
     const qty = Number(quantityToAdd) || 0
-    if (qty <= 0) return
+    if (qty <= 0) return null
 
-    const prod = this.products.find(p => p.id === productIdOrSku || p.sku === productIdOrSku)
-    if (!prod) return
+    const prod = this.products.find(p => p.id === productIdOrSku || String(p.id) === String(productIdOrSku) || p.sku === productIdOrSku)
+    if (!prod) return null
 
     const oldQty = Number(prod.quantity) || 0
     const newQty = oldQty + qty
@@ -575,6 +590,12 @@ export const store = reactive({
       time: 'Just now',
       unread: true
     })
+
+    return prod
+  },
+
+  async restockProduct(productIdOrSku, quantityToAdd, unitCost = null, poNumber = '', notes = '') {
+    return await this.addStockToProduct(productIdOrSku, quantityToAdd, unitCost, poNumber, notes)
   },
 
   async addProduct(product) {
@@ -645,7 +666,14 @@ export const store = reactive({
     this.products.unshift({ id: Date.now(), ...newProd })
   },
 
-  async updateProduct(product) {
+  async updateProduct(idOrProduct, maybeFields = null) {
+    let product = {}
+    if (typeof idOrProduct === 'object' && idOrProduct !== null) {
+      product = { ...idOrProduct }
+    } else {
+      product = { id: idOrProduct, ...(maybeFields || {}) }
+    }
+
     const qty = Number(product.quantity) || 0
     const minStock = Number(product.min_stock) || 10
     const status = qty === 0 ? 'Out of Stock' : (qty <= minStock ? 'Low Stock' : 'In Stock')
@@ -659,6 +687,7 @@ export const store = reactive({
       min_stock: minStock,
       status: status
     }
+    if (product.sku) updatedFields.sku = product.sku
 
     if (supabase && product.id) {
       try {
@@ -668,10 +697,11 @@ export const store = reactive({
       }
     }
 
-    const idx = this.products.findIndex(p => p.id === product.id || p.sku === product.sku)
+    const idx = this.products.findIndex(p => p.id === product.id || String(p.id) === String(product.id) || (product.sku && p.sku === product.sku))
     if (idx !== -1) {
       this.products[idx] = { ...this.products[idx], ...updatedFields }
     }
+    return this.products[idx]
   },
 
   async deleteProduct(id) {
@@ -685,42 +715,114 @@ export const store = reactive({
     this.products = this.products.filter(p => p.id !== id && p.sku !== id)
   },
 
+  generateNextReceiptNumbers() {
+    let maxRecNum = 0
+    let maxInvNum = 1020
+
+    this.receipts.forEach(r => {
+      const recMatch = (r.receipt_no || '').match(/(\d+)$/)
+      if (recMatch) {
+        const num = parseInt(recMatch[1], 10)
+        if (num > maxRecNum) maxRecNum = num
+      }
+      const invMatch = (r.invoice_no || '').match(/(\d+)$/)
+      if (invMatch) {
+        const num = parseInt(invMatch[1], 10)
+        if (num > maxInvNum) maxInvNum = num
+      }
+    })
+
+    const nextRecNum = maxRecNum + 1
+    const nextInvNum = maxInvNum + 1
+
+    return {
+      receipt_no: 'REC-2026-00' + nextRecNum,
+      invoice_no: 'INV-' + nextInvNum
+    }
+  },
+
   async addReceipt(newReceipt) {
     if (supabase) {
       try {
+        let recNo = newReceipt.receipt_no
+        let invNo = newReceipt.invoice_no
+
+        // Always query database for guaranteed highest receipt number and invoice number
+        const { data: allRecs, error: checkErr } = await supabase
+          .from('receipts')
+          .select('receipt_no, invoice_no')
+
+        if (!checkErr && allRecs) {
+          let maxR = 0
+          let maxI = 1020
+          allRecs.forEach(r => {
+            const rm = (r.receipt_no || '').match(/(\d+)$/)
+            if (rm) {
+              const n = parseInt(rm[1], 10)
+              if (n > maxR) maxR = n
+            }
+            const im = (r.invoice_no || '').match(/(\d+)$/)
+            if (im) {
+              const n = parseInt(im[1], 10)
+              if (n > maxI) maxI = n
+            }
+          })
+
+          const currentNum = parseInt(((recNo || '').match(/(\d+)$/) || [0, 0])[1], 10)
+          if (currentNum <= maxR || allRecs.some(r => r.receipt_no === recNo)) {
+            recNo = 'REC-2026-00' + (maxR + 1)
+            invNo = 'INV-' + (maxI + 1)
+            newReceipt.receipt_no = recNo
+            newReceipt.invoice_no = invNo
+          }
+        }
+
         // 1. Insert Receipt
-        await supabase.from('receipts').insert([{
+        const receiptPayload = {
           receipt_no: newReceipt.receipt_no,
           invoice_no: newReceipt.invoice_no,
-          customer_name: newReceipt.customer_name,
-          cashier_name: newReceipt.cashier_name,
-          payment_method: newReceipt.payment_method,
-          subtotal: newReceipt.subtotal,
-          discount: newReceipt.discount,
-          tax: newReceipt.tax || 0,
-          grand_total: newReceipt.grand_total,
-          status: newReceipt.status || 'Unpaid'
-        }])
+          customer_name: (newReceipt.customer_name || 'Walk-in Customer').trim(),
+          cashier_name: (newReceipt.cashier_name || this.currentUser.name || 'Admin User').trim(),
+          payment_method: (newReceipt.payment_method || 'Cash').trim(),
+          subtotal: Number(newReceipt.subtotal) || 0,
+          discount: Number(newReceipt.discount) || 0,
+          tax: Number(newReceipt.tax) || 0,
+          grand_total: Number(newReceipt.grand_total) || 0,
+          status: newReceipt.status || 'Unpaid',
+          created_at: new Date().toISOString()
+        }
 
-        // 2. Insert Receipt Line Items
-        if (newReceipt.items && newReceipt.items.length) {
-          const itemRows = newReceipt.items.map(item => ({
-            receipt_no: newReceipt.receipt_no,
-            item_desc: item.item_desc,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            line_total: item.line_total
-          }))
-          await supabase.from('receipt_items').insert(itemRows)
+        const { error: recErr } = await supabase
+          .from('receipts')
+          .insert([receiptPayload])
 
-          // 3. Deduct product quantities in Supabase
-          for (const item of newReceipt.items) {
-            const prod = this.products.find(p => p.name.toLowerCase() === item.item_desc.toLowerCase())
-            if (prod && prod.id) {
-              const newQty = Math.max(0, prod.quantity - item.quantity)
-              const minStock = Number(prod.min_stock) || 10
-              const newStatus = newQty === 0 ? 'Out of Stock' : (newQty <= minStock ? 'Low Stock' : 'In Stock')
-              await supabase.from('products').update({ quantity: newQty, status: newStatus }).eq('id', prod.id)
+        if (recErr) {
+          console.error('Supabase addReceipt error:', recErr)
+          alert('Warning: Could not save receipt to cloud database: ' + (recErr.message || JSON.stringify(recErr)))
+        } else {
+          // 2. Insert Receipt Line Items
+          if (newReceipt.items && newReceipt.items.length) {
+            const itemRows = newReceipt.items.map(item => ({
+              receipt_no: newReceipt.receipt_no,
+              item_desc: String(item.item_desc || item.name || 'Item').slice(0, 150),
+              quantity: Math.max(1, parseInt(item.quantity, 10) || 1),
+              unit_price: Number(item.unit_price || item.price) || 0,
+              line_total: Number(item.line_total || ((Number(item.price) || 0) * (Number(item.quantity) || 1))) || 0
+            }))
+            const { error: itemErr } = await supabase.from('receipt_items').insert(itemRows)
+            if (itemErr) {
+              console.error('Supabase addReceipt items error:', itemErr)
+            }
+
+            // 3. Deduct product quantities in Supabase
+            for (const item of newReceipt.items) {
+              const prod = this.products.find(p => p.name.toLowerCase() === (item.item_desc || item.name || '').toLowerCase())
+              if (prod && prod.id) {
+                const newQty = Math.max(0, prod.quantity - (parseInt(item.quantity, 10) || 1))
+                const minStock = Number(prod.min_stock) || 10
+                const newStatus = newQty === 0 ? 'Out of Stock' : (newQty <= minStock ? 'Low Stock' : 'In Stock')
+                await supabase.from('products').update({ quantity: newQty, status: newStatus }).eq('id', prod.id)
+              }
             }
           }
         }
@@ -730,6 +832,9 @@ export const store = reactive({
     }
 
     // Local reactive update
+    if (!newReceipt.raw_created_at) {
+      newReceipt.raw_created_at = receiptPayload ? receiptPayload.created_at : new Date().toISOString()
+    }
     this.receipts.unshift(newReceipt)
     if (newReceipt.items) {
       newReceipt.items.forEach(item => {

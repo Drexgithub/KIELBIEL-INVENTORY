@@ -3,12 +3,20 @@
     <router-view />
   </div>
 
-  <div v-else class="app-container">
+  <div v-else class="og-app-layout">
+    <!-- Full-Height Left Sidebar -->
     <Sidebar />
-    <main class="main-content">
+
+    <!-- Main Workspace Area -->
+    <div class="og-main-layout">
       <Navbar />
-      <router-view />
-    </main>
+
+      <main class="og-viewport">
+        <router-view />
+      </main>
+    </div>
+
+    <!-- Receipt Print & View Modal -->
     <ReceiptModal />
   </div>
 </template>
@@ -27,6 +35,8 @@ const isLoginPage = computed(() => route.name === 'login')
 onMounted(() => {
   if (store.darkMode) {
     document.documentElement.setAttribute('data-theme', 'dark')
+  } else {
+    document.documentElement.removeAttribute('data-theme')
   }
 })
 </script>
