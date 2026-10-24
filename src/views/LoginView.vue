@@ -131,12 +131,6 @@
               Real-time telemetry, automated stock control, and point-of-sale intelligence engineered for high-velocity commercial operations.
             </p>
           </div>
-
-          <!-- Live System Badge -->
-          <div class="card-status-pill">
-            <span class="live-dot"></span>
-            <span>Cloud Database Active • Real-Time Sync</span>
-          </div>
         </div>
 
         <!-- Floating corner metrics for high-tech aesthetic -->
