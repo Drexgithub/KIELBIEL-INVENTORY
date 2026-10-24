@@ -11,10 +11,10 @@ export const store = reactive({
       }
     } catch (e) {}
     return {
-      name: 'Kiel Hedrix',
-      email: 'admin@kielbiel.com',
-      role: 'Admin User',
-      isAuthenticated: true
+      name: '',
+      email: '',
+      role: '',
+      isAuthenticated: false
     }
   })(),
   sidebarCollapsed: false,
@@ -1069,3 +1069,4 @@ export const store = reactive({
 
 // Auto-load data from Supabase on application load
 store.loadAllFromSupabase()
+
