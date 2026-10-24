@@ -9,16 +9,6 @@
 
     <!-- Right Header Controls -->
     <div class="og-topbar-actions">
-      <!-- Database Sync Live Indicator -->
-      <div 
-        class="og-badge active" 
-        style="cursor: pointer; font-size: 0.72rem; padding: 4px 10px;"
-        :title="'Live Supabase Connected (' + store.receipts.length + ' receipts)'"
-      >
-        <span style="width: 6px; height: 6px; border-radius: 50%; background: #10B981; display: inline-block;"></span>
-        <span>Supabase Sync Active</span>
-      </div>
-
       <!-- Quick Action Pill: Contact Support / Docs -->
       <button class="btn-dark btn-sm" @click="showSupportModal = true" style="font-size: 0.78rem;">
         <HelpCircle style="width: 14px; height: 14px;" />

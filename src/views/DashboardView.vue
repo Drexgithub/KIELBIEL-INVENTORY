@@ -9,12 +9,6 @@
       </div>
 
       <div class="og-header-actions">
-        <!-- Live Database Badge -->
-        <div class="og-badge active" style="font-size: 0.8rem; padding: 6px 14px;">
-          <span style="width: 7px; height: 7px; border-radius: 50%; background: #10B981; display: inline-block;"></span>
-          <span>Live Supabase Database ({{ store.receipts.length }} Receipts)</span>
-        </div>
-
         <button class="btn-dark" @click="showSupport = true">
           <HelpCircle style="width: 15px; height: 15px;" />
           <span>Support & Help</span>
