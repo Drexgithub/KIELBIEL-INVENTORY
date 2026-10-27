@@ -769,7 +769,7 @@ input:checked + .slider:before { transform: translateX(20px); }
         min-height: 100% !important;
         background: #ffffff !important;
         backdrop-filter: none !important;
-        padding: 15mm 20mm !important;
+        padding: 0 !important;
         margin: 0 !important;
         border: none !important;
         border-left: none !important;

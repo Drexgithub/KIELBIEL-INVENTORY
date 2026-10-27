@@ -17,7 +17,7 @@
             <span>--- Page {{ page.pageNum }} of {{ page.totalPages }} ---</span>
           </div>
 
-          <!-- Page 1 Only: Company Official Header -->
+          <!-- Page 1 ONLY: Company Official Header -->
           <div v-if="page.isFirst" class="receipt-header">
             <h1 class="company-title">KIEL BIEL CONSUMER GOODS TRADING</h1>
             <p class="company-subtitle">Brgy.42 Rawis, Legazpi City</p>
@@ -25,7 +25,7 @@
             <div class="official-invoice-tag">OFFICIAL RECEIPT / INVOICE</div>
           </div>
 
-          <!-- Page 1 Only: Receipt Metadata Grid -->
+          <!-- Page 1 ONLY: Receipt Metadata Grid (Customer, Date, Receipt No) -->
           <div v-if="page.isFirst" class="receipt-meta-grid">
             <div class="meta-column">
               <div><span class="meta-label">Customer Name:</span> <strong class="meta-val">{{ receipt.customer_name || 'Walk-in Customer' }}</strong></div>
@@ -40,26 +40,27 @@
             </div>
           </div>
 
-          <!-- Itemized Table for this page -->
-          <table class="receipt-items-table" :class="{ 'no-header-table': !page.isFirst }">
-            <!-- Table Headings ONLY on Page 1 -->
-            <thead v-if="page.isFirst">
+          <!-- Itemized Table (Frameless / No Lines between items) -->
+          <table class="receipt-items-table">
+            <thead>
               <tr>
-                <th style="width: 45%; text-align: left;">Item Description</th>
-                <th style="width: 15%; text-align: center;">Qty</th>
-                <th style="width: 20%; text-align: right;">Unit Price</th>
-                <th style="width: 20%; text-align: right;">Line Total</th>
+                <th style="width: 46%; text-align: left;">ITEM DESCRIPTION</th>
+                <th style="width: 14%; text-align: center;">QTY</th>
+                <th style="width: 20%; text-align: right;">UNIT PRICE</th>
+                <th style="width: 20%; text-align: right;">LINE TOTAL</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(item, idx) in page.items" :key="idx">
-                <td style="width: 45%; text-align: left;">
+              <tr v-for="(item, idx) in page.items" :key="idx" class="receipt-item-row">
+                <td style="width: 46%; text-align: left;" class="col-desc">
                   <strong class="item-name">{{ item.item_desc }}</strong>
                 </td>
-                <td style="width: 15%; text-align: center;" class="item-qty">{{ item.quantity }}</td>
-                <td style="width: 20%; text-align: right;" class="item-price">₱{{ Number(item.unit_price).toFixed(2) }}</td>
-                <td style="width: 20%; text-align: right;" class="item-total">₱{{ Number(item.line_total).toFixed(2) }}</td>
+                <td style="width: 14%; text-align: center;" class="col-qty item-qty">{{ item.quantity }}</td>
+                <td style="width: 20%; text-align: right;" class="col-price item-price">₱{{ Number(item.unit_price).toFixed(2) }}</td>
+                <td style="width: 20%; text-align: right;" class="col-total item-total">₱{{ Number(item.line_total).toFixed(2) }}</td>
               </tr>
+
+              <!-- Fallback if receipt has zero items recorded -->
               <tr v-if="!page.items || !page.items.length">
                 <td colspan="4" style="text-align: center; padding: 1.5rem; color: var(--text-muted);">No items recorded for this receipt.</td>
               </tr>
@@ -68,7 +69,7 @@
 
         </div>
 
-        <!-- Final Page Only: Totals and Signatures Pinned to Bottom -->
+        <!-- Final Page Only: Totals and Signatures Anchor -->
         <div v-if="page.isLast" class="page-bottom-anchor">
           <!-- Totals Breakdown -->
           <div class="receipt-totals-container">
@@ -193,12 +194,14 @@ const customerAddress = computed(() => {
   return found ? (found.address || 'Store Direct') : 'Store Direct'
 })
 
-// Dynamic Pagination Algorithm
+// Dynamic Pagination Algorithm calibrated to occupy full A4 paper height
 function estimateItemHeight(item) {
   const desc = (item.item_desc || '').trim()
-  // Approximate character line wrap threshold for 45% description column at 14px font
-  const lines = Math.max(1, Math.ceil(desc.length / 32))
-  return 34 + (lines - 1) * 16
+  // With 16.5px font and 0.62rem vertical padding:
+  // Base 1-line item height is ~45px
+  // Multiline wraps at approximately 30 characters in 46% description column
+  const lines = Math.max(1, Math.ceil(desc.length / 30))
+  return 45 + (lines - 1) * 22
 }
 
 const paginatedPages = computed(() => {
@@ -214,13 +217,17 @@ const paginatedPages = computed(() => {
     }]
   }
 
-  // Printable page capacity units (px equivalent in print container with 2.54cm margins on all sides)
-  const TOTAL_PAGE_CAPACITY = 850
-  const PAGE_1_HEADER_SPACE = 210 // Company Header + Meta Grid + Table <thead>
-  const TOTALS_AND_SIG_SPACE = 160 // Subtotal, Grand Total, Signatures, margins
+  // Exact Printable Page Capacity Units (A4 portrait = 297mm = 1122.5px):
+  // Margins: 11mm top + 11mm bottom = 22mm = ~84px
+  // Usable printable height: ~1038px.
+  // Budget calibrated to ~970px leaves zero awkward white space and prevents accidental overflow.
+  const TOTAL_PAGE_CAPACITY = 970
+  const PAGE_1_HEADER_SPACE = 265 // Company Header + Meta Grid + Table <thead>
+  const TABLE_HEADER_SPACE = 42   // Table <thead> on Page 2+
+  const TOTALS_AND_SIG_SPACE = 175 // Subtotal, Grand Total, Signatures
 
   // Case 1: All items fit comfortably on a single page
-  const singlePageItemCap = TOTAL_PAGE_CAPACITY - PAGE_1_HEADER_SPACE - TOTALS_AND_SIG_SPACE // ~480px (~14 items)
+  const singlePageItemCap = TOTAL_PAGE_CAPACITY - PAGE_1_HEADER_SPACE - TOTALS_AND_SIG_SPACE // ~530px (~12-13 items)
   let totalAllItemsHeight = 0
   for (const it of items) {
     totalAllItemsHeight += estimateItemHeight(it)
@@ -242,8 +249,8 @@ const paginatedPages = computed(() => {
   let currentIndex = 0
   let pageNum = 1
 
-  // Page 1
-  const page1Capacity = TOTAL_PAGE_CAPACITY - PAGE_1_HEADER_SPACE // ~640px (~18-19 items)
+  // Page 1 Capacity: ~705px (~15-16 items max, guarantees zero spillover to page 2)
+  const page1Capacity = TOTAL_PAGE_CAPACITY - PAGE_1_HEADER_SPACE
   let currentAccumulated = 0
   const page1Items = []
 
@@ -274,7 +281,8 @@ const paginatedPages = computed(() => {
       remainingHeight += estimateItemHeight(it)
     }
 
-    const lastPageCapacity = TOTAL_PAGE_CAPACITY - TOTALS_AND_SIG_SPACE // ~690px (~20 items)
+    // Last Page Capacity (has table header, remaining items, totals, & signatures)
+    const lastPageCapacity = TOTAL_PAGE_CAPACITY - TABLE_HEADER_SPACE - TOTALS_AND_SIG_SPACE // ~753px (~16-17 items)
 
     // Check if remaining items fit on this page as the LAST page
     if (remainingHeight <= lastPageCapacity) {
@@ -287,8 +295,8 @@ const paginatedPages = computed(() => {
       })
       break
     } else {
-      // Middle Page (full height capacity for items)
-      const middlePageCapacity = TOTAL_PAGE_CAPACITY // ~850px (~24-25 items)
+      // Middle Page (only table header at top, holds up to ~20-22 items, occupying full paper)
+      const middlePageCapacity = TOTAL_PAGE_CAPACITY - TABLE_HEADER_SPACE // ~928px
       let midAccumulated = 0
       const midItems = []
 
@@ -342,9 +350,9 @@ function printReceipt() {
   --bg-main: #F3F4F6 !important;
   --input-bg: #F9FAFB !important;
   border-radius: var(--radius-lg);
-  padding: 1.25rem 1.75rem;
-  max-width: 680px;
-  width: 92%;
+  padding: 1.5rem 2rem;
+  max-width: 760px;
+  width: 95%;
   max-height: 90vh;
   overflow-y: auto;
   margin: auto;
@@ -364,137 +372,155 @@ function printReceipt() {
 }
 
 .page-screen-divider {
-  border-top: 1.5px dashed var(--border);
-  margin: 1.5rem 0 1.25rem;
+  border-top: 2px dashed #94A3B8;
+  margin: 2rem 0 1.5rem;
   text-align: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #475569;
+  letter-spacing: 0.06em;
 }
 
 .receipt-header {
   text-align: center;
-  border-bottom: 1.5px solid var(--border);
-  padding-bottom: 0.6rem;
-  margin-bottom: 0.75rem;
+  border-bottom: 2px solid #111827;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.85rem;
 }
 
 .company-title {
-  font-size: 1.15rem;
+  font-size: 1.35rem;
   font-weight: 800;
-  letter-spacing: -0.2px;
+  letter-spacing: -0.3px;
   color: var(--text-main);
   margin: 0;
   line-height: 1.2;
 }
 
 .company-subtitle {
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   color: var(--text-muted);
-  margin-top: 1px;
+  margin-top: 2px;
   line-height: 1.3;
 }
 
 .official-invoice-tag {
   display: inline-block;
-  margin-top: 0.4rem;
-  padding: 0.2rem 0.75rem;
+  margin-top: 0.45rem;
+  padding: 0.25rem 0.9rem;
   background: var(--primary-light);
   color: var(--primary);
   font-weight: 800;
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   border-radius: 999px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  border: 1px solid rgba(37, 99, 235, 0.3);
 }
 
 .receipt-meta-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.5rem 1rem;
-  font-size: 0.75rem;
-  padding: 0.6rem 0.85rem;
+  gap: 0.5rem 1.25rem;
+  font-size: 0.82rem;
+  padding: 0.75rem 1rem;
   background: var(--input-bg);
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
-  margin-bottom: 0.75rem;
-  line-height: 1.45;
+  margin-bottom: 0.85rem;
+  line-height: 1.5;
 }
 
-.meta-label { color: var(--text-muted); font-size: 0.72rem; }
-.meta-val { color: var(--text-main); font-size: 0.75rem; }
+.meta-label { color: var(--text-muted); font-size: 0.8rem; font-weight: 600; }
+.meta-val { color: var(--text-main); font-size: 0.84rem; font-weight: 700; }
 
+/* Frameless Clean Table with Generous Row Spacing */
 .receipt-items-table {
   width: 100%;
   table-layout: fixed;
   border-collapse: collapse;
   margin-bottom: 0.75rem;
+  border: none !important;
 }
 
 .receipt-items-table th {
-  padding: 0.4rem 0.5rem;
-  background: var(--bg-main);
-  border-bottom: 1.5px solid var(--border);
-  font-size: 0.68rem;
+  padding: 0.6rem 0.6rem;
+  background: transparent;
+  border-top: 1.5px solid #111827;
+  border-bottom: 1.5px solid #111827;
+  border-left: none !important;
+  border-right: none !important;
+  font-size: 0.82rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-main);
+  font-weight: 800;
 }
 
 .receipt-items-table td {
-  padding: 0.35rem 0.5rem;
-  font-size: 14px;
+  padding: 0.62rem 0.6rem;
+  font-size: 16.5px;
   color: var(--text-main);
-  line-height: 1.35;
+  line-height: 1.4;
+  border: none !important;
+  vertical-align: middle;
 }
 
 .item-name {
   color: var(--text-main);
   font-weight: 700;
+  font-size: 16.5px;
+  display: block;
 }
 
 .item-qty {
   color: var(--text-main);
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 16.5px;
 }
 
 .item-price {
   color: var(--text-main);
+  font-weight: 600;
+  font-size: 16.5px;
 }
 
 .item-total {
   color: var(--text-main);
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 16.5px;
 }
 
 .page-bottom-anchor {
-  margin-top: 0.75rem;
+  margin-top: 1rem;
 }
 
 .receipt-totals-container {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.75rem;
 }
 
 .receipt-totals-box {
-  width: 250px;
+  width: 280px;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.75rem;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+  background: transparent;
+  padding: 0;
+  border: none;
 }
 
 .total-row { 
   display: flex; 
   justify-content: space-between; 
   color: var(--text-muted); 
+  font-weight: 600;
 }
 
 .total-val {
   color: var(--text-main);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .text-discount {
@@ -502,12 +528,12 @@ function printReceipt() {
 }
 
 .total-row.grand-total {
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   font-weight: 800;
   color: var(--text-main);
-  border-top: 1.5px dashed var(--border);
-  padding-top: 0.4rem;
-  margin-top: 0.2rem;
+  border-top: 1.5px solid #111827;
+  padding-top: 0.45rem;
+  margin-top: 0.25rem;
 }
 
 .grand-total-val {
@@ -519,29 +545,30 @@ function printReceipt() {
   text-align: center;
   border-top: none;
   padding-top: 0;
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
 }
 
 .signature-section {
   display: flex;
   justify-content: space-between;
-  margin-top: 18px;
+  margin-top: 24px;
 }
 
 .sig-box {
-  width: 42%;
+  width: 44%;
   text-align: center;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
+  font-weight: 700;
   color: var(--text-main);
 }
 
 .sig-line {
-  border-top: 1.2px solid var(--text-main);
-  margin-bottom: 4px;
+  border-top: 1.5px solid var(--text-main);
+  margin-bottom: 5px;
 }
 
 /* ==================================================================== */
-/* EXACT FULL A4 PRINT STYLES (Clean Multi-Page Overflow Support)       */
+/* EXACT FULL A4 PRINT STYLES (No Lines/Frames, Occupies Full Page)     */
 /* ==================================================================== */
 @media print {
   @page {
@@ -600,14 +627,13 @@ function printReceipt() {
     width: 100% !important;
     min-height: 297mm !important;
     height: 297mm !important;
-    max-height: 297mm !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: flex-start !important;
     page-break-after: always !important;
     break-after: page !important;
     box-sizing: border-box !important;
-    padding: 2.54cm 2.54cm 2.54cm 2.54cm !important;
+    padding: 11mm 15mm 11mm 15mm !important;
     margin: 0 !important;
     position: relative !important;
   }
@@ -625,65 +651,85 @@ function printReceipt() {
 
   .page-bottom-anchor {
     margin-top: auto !important;
-    padding-top: 0.75rem !important;
+    padding-top: 0.5rem !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
+  /* Company Header (Page 1 Only) */
   .receipt-header {
     text-align: center !important;
     border-bottom: 2px solid #000000 !important;
-    padding-bottom: 1rem !important;
-    margin-bottom: 1.25rem !important;
+    padding-bottom: 0.75rem !important;
+    margin-bottom: 0.75rem !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
   .company-title {
     color: #000000 !important;
-    font-size: 18pt !important;
+    font-size: 20pt !important;
     font-weight: 800 !important;
+    letter-spacing: -0.3px !important;
+    margin: 0 0 4px 0 !important;
+    line-height: 1.15 !important;
   }
 
   .company-subtitle {
-    color: #333333 !important;
-    font-size: 9pt !important;
+    color: #222222 !important;
+    font-size: 10.5pt !important;
+    margin: 1px 0 !important;
+    line-height: 1.3 !important;
   }
 
   .official-invoice-tag {
     display: inline-block !important;
     background: #f1f5f9 !important;
     color: #000000 !important;
-    border: 1px solid #000000 !important;
-    font-size: 8.5pt !important;
+    border: 1.5px solid #000000 !important;
+    font-size: 10pt !important;
     font-weight: 800 !important;
-    padding: 3px 12px !important;
+    padding: 3px 16px !important;
     margin-top: 6px !important;
     border-radius: 999px !important;
+    letter-spacing: 0.05em !important;
   }
 
+  /* Metadata Grid (Page 1 Only) */
   .receipt-meta-grid {
     display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 0.75rem 1.25rem !important;
+    grid-template-columns: 1.15fr 0.85fr !important;
+    gap: 0.5rem 1.5rem !important;
     background: #f8fafc !important;
-    border: 1px solid #cbd5e1 !important;
+    border: 1px solid #94a3b8 !important;
     color: #000000 !important;
-    padding: 0.85rem 1rem !important;
-    margin-bottom: 1.25rem !important;
-    font-size: 9pt !important;
+    padding: 0.75rem 1rem !important;
+    margin-bottom: 0.85rem !important;
+    font-size: 10.5pt !important;
+    line-height: 1.4 !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
-  .meta-label { color: #475569 !important; font-size: 8.5pt !important; }
-  .meta-val { color: #000000 !important; font-size: 9pt !important; }
+  .meta-label {
+    color: #334155 !important;
+    font-size: 10pt !important;
+    font-weight: 600 !important;
+  }
 
+  .meta-val {
+    color: #000000 !important;
+    font-size: 10.5pt !important;
+    font-weight: 700 !important;
+  }
+
+  /* Clean, Frameless Table (NO BOX, NO VERTICAL OR ROW BORDERS) */
   .receipt-items-table {
     width: 100% !important;
     table-layout: fixed !important;
     border-collapse: collapse !important;
     margin-bottom: 0.5rem !important;
+    border: none !important;
   }
 
   .receipt-items-table thead {
@@ -691,34 +737,52 @@ function printReceipt() {
   }
 
   .receipt-items-table th {
-    background: #e2e8f0 !important;
+    background: transparent !important;
     color: #000000 !important;
-    border-bottom: 2px solid #000000 !important;
-    padding: 0.5rem 0.6rem !important;
-    font-size: 8.5pt !important;
+    border-top: 1.5px solid #000000 !important;
+    border-bottom: 1.5px solid #000000 !important;
+    border-left: none !important;
+    border-right: none !important;
+    padding: 0.65rem 0.6rem !important;
+    font-size: 11pt !important;
     text-transform: uppercase !important;
-    font-weight: 700 !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
   }
 
   .receipt-items-table td {
-    padding: 0.4rem 0.6rem !important;
-    font-size: 14px !important;
+    padding: 0.62rem 0.6rem !important;
+    font-size: 16.5px !important;
     color: #000000 !important;
-    font-weight: 600 !important;
+    border: none !important;
+    border-top: none !important;
     border-bottom: none !important;
-    line-height: 1.35 !important;
+    border-left: none !important;
+    border-right: none !important;
+    line-height: 1.4 !important;
+    vertical-align: middle !important;
   }
 
-  .receipt-items-table td strong,
   .item-name {
     color: #000000 !important;
+    font-size: 16.5px !important;
+    font-weight: 700 !important;
+    display: block !important;
+  }
+
+  .item-qty {
+    font-size: 16.5px !important;
     font-weight: 700 !important;
   }
 
-  .item-qty,
-  .item-price,
+  .item-price {
+    font-size: 16.5px !important;
+    font-weight: 600 !important;
+  }
+
   .item-total {
-    color: #000000 !important;
+    font-size: 16.5px !important;
+    font-weight: 800 !important;
   }
 
   .receipt-items-table tr {
@@ -726,32 +790,44 @@ function printReceipt() {
     break-inside: avoid !important;
   }
 
+  /* Totals Container (Clean, Frameless) */
   .receipt-totals-container {
     display: flex !important;
     justify-content: flex-end !important;
-    margin-bottom: 0.5rem !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.6rem !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
   .receipt-totals-box {
-    width: 270px !important;
+    width: 290px !important;
     display: flex !important;
     flex-direction: column !important;
     gap: 0.35rem !important;
-    font-size: 9.5pt !important;
+    font-size: 11.5pt !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
   }
 
-  .total-row span,
-  .total-val { 
-    color: #000000 !important; 
+  .total-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    color: #334155 !important;
+    font-weight: 600 !important;
+  }
+
+  .total-val {
+    color: #000000 !important;
+    font-weight: 700 !important;
   }
 
   .total-row.grand-total {
-    font-size: 12pt !important;
-    padding-top: 0.4rem !important;
+    font-size: 13.5pt !important;
+    padding-top: 0.45rem !important;
     margin-top: 0.25rem !important;
-    border-top: 2px solid #000000 !important;
+    border-top: 1.5px solid #000000 !important;
   }
 
   .total-row.grand-total span,
@@ -760,6 +836,7 @@ function printReceipt() {
     font-weight: 800 !important;
   }
 
+  /* Signatures */
   .receipt-footer {
     border-top: none !important;
     padding-top: 0 !important;
@@ -771,8 +848,8 @@ function printReceipt() {
   .signature-section {
     display: flex !important;
     justify-content: space-between !important;
-    margin-top: 2.5rem !important;
-    padding-top: 1rem !important;
+    margin-top: 1.8rem !important;
+    padding-top: 0.5rem !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
@@ -780,7 +857,8 @@ function printReceipt() {
   .sig-box {
     width: 44% !important;
     text-align: center !important;
-    font-size: 9.5pt !important;
+    font-size: 10.5pt !important;
+    font-weight: 700 !important;
     color: #000000 !important;
   }
 
