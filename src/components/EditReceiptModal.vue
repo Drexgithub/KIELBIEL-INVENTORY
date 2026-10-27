@@ -92,25 +92,103 @@
 
           <!-- SECTION: PRODUCTS / LINE ITEMS -->
           <div class="edit-items-section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.75rem;">
               <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <Package style="width: 16px; height: 16px; color: #10B981;" />
                 <h4 style="color: #FFFFFF; font-size: 0.95rem; font-weight: 700; margin: 0;">Products in this Receipt</h4>
                 <span class="count-badge">{{ formItems.length }} item(s)</span>
               </div>
               
-              <!-- Quick Add Product bar -->
-              <div style="display: flex; gap: 6px; align-items: center; flex: 1; max-width: 420px; justify-content: flex-end;">
-                <select v-model="selectedProductToAdd" class="og-pill-select" style="height: 34px; font-size: 0.8rem; max-width: 280px; flex: 1;">
-                  <option value="" disabled>-- Select Product from Inventory --</option>
-                  <option v-for="p in availableProducts" :key="p.id" :value="p">
-                    {{ p.name }} (Stock: {{ p.quantity }} | ₱{{ Number(p.price).toFixed(2) }})
-                  </option>
-                </select>
-                <button type="button" class="btn btn-primary btn-sm" @click="addProductToReceipt" :disabled="!selectedProductToAdd" style="height: 34px; padding: 0 12px; font-size: 0.78rem;">
-                  <Plus style="width: 14px; height: 14px;" /> Add
-                </button>
-                <button type="button" class="btn-dark btn-sm" @click="addCustomItem" title="Add blank custom line" style="height: 34px; padding: 0 10px; font-size: 0.78rem;">
+              <!-- Searchable Add Product from Inventory Combobox Bar -->
+              <div style="display: flex; gap: 8px; align-items: center; flex: 1; max-width: 480px; justify-content: flex-end;">
+                <div ref="productSearchWrapper" class="product-search-combobox">
+                  <div class="search-input-wrap">
+                    <Search class="search-box-icon" />
+                    <input 
+                      type="text" 
+                      v-model="productSearchQuery" 
+                      placeholder="Search product from inventory..." 
+                      class="product-combobox-input"
+                      @focus="showProductDropdown = true"
+                      @input="showProductDropdown = true"
+                      @keydown.enter.prevent="handleProductSearchEnter"
+                      @keydown.esc="showProductDropdown = false"
+                    />
+                    <!-- Clear query button -->
+                    <button 
+                      v-if="productSearchQuery" 
+                      type="button" 
+                      class="clear-search-btn" 
+                      @click="productSearchQuery = ''; showProductDropdown = true"
+                      title="Clear search"
+                    >
+                      <X style="width: 13px; height: 13px;" />
+                    </button>
+                    <!-- Toggle dropdown button -->
+                    <button 
+                      type="button" 
+                      class="dropdown-toggle-btn" 
+                      @click="toggleDropdown"
+                      :title="showProductDropdown ? 'Close list' : 'Browse all products'"
+                    >
+                      <ChevronDown style="width: 15px; height: 15px;" :style="{ transform: showProductDropdown ? 'rotate(180deg)' : 'none', transition: '0.2s' }" />
+                    </button>
+                  </div>
+
+                  <!-- Floating Search Results Dropdown -->
+                  <transition name="fade">
+                    <div 
+                      v-if="showProductDropdown" 
+                      class="product-dropdown-card"
+                    >
+                      <div class="dropdown-header-bar">
+                        <span>{{ filteredProductsList.length }} product(s) available</span>
+                        <span v-if="productSearchQuery" class="matching-for">matching "{{ productSearchQuery }}"</span>
+                      </div>
+
+                      <div class="dropdown-scroll-list">
+                        <div 
+                          v-for="p in filteredProductsList" 
+                          :key="p.id" 
+                          class="product-dropdown-item"
+                          @click="selectProductToAdd(p)"
+                        >
+                          <div class="item-left">
+                            <strong class="item-product-name">{{ p.name }}</strong>
+                            <div class="item-badges-row">
+                              <span v-if="p.sku" class="sku-tag">{{ p.sku }}</span>
+                              <span v-if="p.category" class="cat-tag">{{ p.category }}</span>
+                              <span class="stock-tag" :class="getStockTagClass(p)">
+                                ● {{ p.quantity }} in stock
+                              </span>
+                            </div>
+                          </div>
+                          <div class="item-right">
+                            <span class="item-price-tag">₱{{ Number(p.price).toFixed(2) }}</span>
+                            <button type="button" class="quick-add-btn" title="Add to receipt">
+                              <Plus style="width: 13px; height: 13px;" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <!-- Empty state -->
+                        <div v-if="!filteredProductsList.length" class="empty-dropdown-results">
+                          <AlertCircle style="width: 18px; height: 18px; opacity: 0.5; margin-bottom: 4px;" />
+                          <div>No inventory products matching "{{ productSearchQuery }}"</div>
+                        </div>
+                      </div>
+                    </div>
+                  </transition>
+                </div>
+
+                <!-- Custom non-inventory line button -->
+                <button 
+                  type="button" 
+                  class="btn-dark btn-sm" 
+                  @click="addCustomItem" 
+                  title="Add blank custom line item" 
+                  style="height: 36px; padding: 0 12px; font-size: 0.78rem; white-space: nowrap; flex-shrink: 0;"
+                >
                   + Custom
                 </button>
               </div>
@@ -197,7 +275,7 @@
                     <td colspan="5" style="text-align: center; padding: 2.5rem 1rem; color: #94A3B8;">
                       <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
                         <Package style="width: 28px; height: 28px; opacity: 0.5;" />
-                        <span>No products in this receipt. Select a product from the dropdown above to add items.</span>
+                        <span>No products in this receipt. Search and select a product above to add items.</span>
                       </div>
                     </td>
                   </tr>
@@ -294,7 +372,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
 import { store } from '../store/inventoryStore.js'
 import { 
   Edit3, 
@@ -304,12 +382,18 @@ import {
   Package, 
   RefreshCw, 
   Save, 
-  AlertCircle 
+  AlertCircle,
+  Search,
+  ChevronDown
 } from 'lucide-vue-next'
 
 const isSaving = ref(false)
 const errorMessage = ref('')
-const selectedProductToAdd = ref('')
+
+// Searchable product combobox state
+const productSearchWrapper = ref(null)
+const productSearchQuery = ref('')
+const showProductDropdown = ref(false)
 
 const form = reactive({
   receipt_no: '',
@@ -331,6 +415,9 @@ const originalItems = ref([])
 watch(() => store.activeEditReceiptModal, (newVal) => {
   if (newVal) {
     errorMessage.value = ''
+    productSearchQuery.value = ''
+    showProductDropdown.value = false
+
     form.receipt_no = newVal.receipt_no || ''
     form.invoice_no = newVal.invoice_no || ''
     form.customer_name = newVal.customer_name || 'Walk-in Customer'
@@ -352,16 +439,78 @@ watch(() => store.activeEditReceiptModal, (newVal) => {
 
     // Keep deep copy of original items to compute live delta
     originalItems.value = JSON.parse(JSON.stringify(formItems.value))
-    selectedProductToAdd.value = ''
   } else {
     formItems.value = []
     originalItems.value = []
     errorMessage.value = ''
+    productSearchQuery.value = ''
+    showProductDropdown.value = false
   }
 }, { immediate: true })
 
-const availableProducts = computed(() => {
-  return store.products || []
+const filteredProductsList = computed(() => {
+  const q = productSearchQuery.value.trim().toLowerCase()
+  if (!q) {
+    return store.products || []
+  }
+  return (store.products || []).filter(p => {
+    const nameMatch = (p.name || '').toLowerCase().includes(q)
+    const skuMatch = (p.sku || '').toLowerCase().includes(q)
+    const catMatch = (p.category || '').toLowerCase().includes(q)
+    return nameMatch || skuMatch || catMatch
+  })
+})
+
+function toggleDropdown() {
+  showProductDropdown.value = !showProductDropdown.value
+}
+
+function selectProductToAdd(prod) {
+  if (!prod) return
+  // Check if item already exists in formItems
+  const existing = formItems.value.find(i => i.item_desc.trim().toLowerCase() === prod.name.trim().toLowerCase())
+  if (existing) {
+    existing.quantity = (parseInt(existing.quantity, 10) || 1) + 1
+    recalcLine(existing)
+  } else {
+    formItems.value.push({
+      item_desc: prod.name,
+      quantity: 1,
+      unit_price: Number(prod.price) || 0,
+      line_total: Number(prod.price) || 0
+    })
+  }
+
+  productSearchQuery.value = ''
+  showProductDropdown.value = false
+}
+
+function handleProductSearchEnter() {
+  if (filteredProductsList.value.length > 0) {
+    selectProductToAdd(filteredProductsList.value[0])
+  }
+}
+
+function getStockTagClass(p) {
+  const qty = Number(p.quantity || 0)
+  const minStock = Number(p.min_stock || 10)
+  if (qty === 0) return 'stock-out'
+  if (qty <= minStock) return 'stock-low'
+  return 'stock-ok'
+}
+
+function handleClickOutside(e) {
+  if (productSearchWrapper.value && !productSearchWrapper.value.contains(e.target)) {
+    showProductDropdown.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('click', handleClickOutside)
 })
 
 function getStockPreview(desc) {
@@ -389,27 +538,6 @@ function decQty(item) {
 
 function removeItem(idx) {
   formItems.value.splice(idx, 1)
-}
-
-function addProductToReceipt() {
-  if (!selectedProductToAdd.value) return
-  const prod = selectedProductToAdd.value
-
-  // Check if item already exists in formItems
-  const existing = formItems.value.find(i => i.item_desc.trim().toLowerCase() === prod.name.trim().toLowerCase())
-  if (existing) {
-    existing.quantity = (parseInt(existing.quantity, 10) || 1) + 1
-    recalcLine(existing)
-  } else {
-    formItems.value.push({
-      item_desc: prod.name,
-      quantity: 1,
-      unit_price: Number(prod.price) || 0,
-      line_total: Number(prod.price) || 0
-    })
-  }
-
-  selectedProductToAdd.value = ''
 }
 
 function addCustomItem() {
@@ -456,7 +584,6 @@ const stockDeltas = computed(() => {
     const newQ = newMap[k] || 0
     const delta = oldQ - newQ
     if (delta !== 0) {
-      // Find display name
       const prod = store.findProductByItemDesc(k)
       deltas.push({
         name: prod ? prod.name : k,
@@ -589,6 +716,244 @@ async function handleSave() {
   font-weight: 600;
 }
 
+/* Searchable Combobox Styles */
+.product-search-combobox {
+  position: relative;
+  width: 100%;
+}
+
+.search-input-wrap {
+  display: flex;
+  align-items: center;
+  position: relative;
+  background: #0A0F1A;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.search-input-wrap:focus-within {
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+  background: #0E1626;
+}
+
+.search-box-icon {
+  position: absolute;
+  left: 10px;
+  width: 14px;
+  height: 14px;
+  color: #64748B;
+  pointer-events: none;
+}
+
+.product-combobox-input {
+  width: 100% !important;
+  height: 36px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 54px 0 32px !important;
+  font-size: 0.82rem !important;
+  color: #FFFFFF !important;
+}
+
+.product-combobox-input::placeholder {
+  color: #64748B;
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 28px;
+  background: none;
+  border: none;
+  color: #64748B;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.clear-search-btn:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dropdown-toggle-btn {
+  position: absolute;
+  right: 6px;
+  background: none;
+  border: none;
+  color: #64748B;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.dropdown-toggle-btn:hover {
+  color: #3B82F6;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.product-dropdown-card {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  background: #0F172A;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75);
+  overflow: hidden;
+}
+
+.dropdown-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.72rem;
+  color: #94A3B8;
+  font-weight: 600;
+}
+
+.matching-for {
+  color: #60A5FA;
+  font-weight: 500;
+}
+
+.dropdown-scroll-list {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.product-dropdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.product-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.product-dropdown-item:hover {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.item-left {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 72%;
+}
+
+.item-product-name {
+  font-size: 0.84rem;
+  color: #FFFFFF;
+  line-height: 1.25;
+}
+
+.item-badges-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sku-tag {
+  font-family: monospace;
+  font-size: 0.68rem;
+  background: rgba(255, 255, 255, 0.08);
+  color: #94A3B8;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.cat-tag {
+  font-size: 0.68rem;
+  background: rgba(59, 130, 246, 0.12);
+  color: #60A5FA;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.stock-tag {
+  font-size: 0.68rem;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.stock-ok {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+}
+
+.stock-low {
+  background: rgba(245, 158, 11, 0.15);
+  color: #F59E0B;
+}
+
+.stock-out {
+  background: rgba(239, 68, 68, 0.15);
+  color: #EF4444;
+}
+
+.item-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.item-price-tag {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #10B981;
+}
+
+.quick-add-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: #2563EB;
+  border: none;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s, background 0.15s;
+}
+
+.product-dropdown-item:hover .quick-add-btn {
+  background: #3B82F6;
+  transform: scale(1.08);
+}
+
+.empty-dropdown-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  font-size: 0.8rem;
+  color: #64748B;
+  text-align: center;
+}
+
+/* Table inline inputs */
 .table-inline-input {
   height: 32px !important;
   font-size: 0.82rem !important;
