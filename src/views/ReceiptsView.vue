@@ -166,9 +166,14 @@
                     <Eye style="width: 14px; height: 14px;" />
                   </button>
 
+                  <!-- Edit Receipt & Items -->
+                  <button class="icon-btn" style="width: 30px; height: 30px;" title="Edit Receipt & Products" @click="store.openEditReceipt(r)">
+                    <Edit3 style="width: 14px; height: 14px; color: #3B82F6;" />
+                  </button>
+
                   <!-- Direct Print -->
                   <button class="icon-btn" style="width: 30px; height: 30px;" title="Print Receipt" @click="directPrint(r)">
-                    <Printer style="width: 14px; height: 14px; color: #3B82F6;" />
+                    <Printer style="width: 14px; height: 14px; color: #10B981;" />
                   </button>
 
                   <!-- Delete Receipt -->
@@ -214,7 +219,7 @@
 
           <p style="font-size: 0.88rem; color: var(--og-text-secondary); line-height: 1.5; margin-bottom: 1.25rem;">
             Are you sure you want to permanently delete receipt <strong style="color: #3B82F6; font-family: monospace;">{{ receiptToDelete.receipt_no }}</strong> for <strong>{{ receiptToDelete.customer_name || 'Walk-in Customer' }}</strong> (₱{{ Number(receiptToDelete.grand_total).toLocaleString('en-US', { minimumFractionDigits: 2 }) }})?
-            <br><span style="color: #EF4444; font-size: 0.78rem;">This will permanently remove the record from both local state and cloud database.</span>
+            <br><span style="color: #10B981; font-size: 0.8rem; font-weight: 600; display: block; margin-top: 6px;">📦 All products inside this receipt will automatically be returned to inventory stock.</span>
           </p>
 
           <div v-if="deleteError" class="status-badge status-cancelled" style="padding: 8px 12px; font-size: 0.82rem; margin-bottom: 1rem;">
@@ -255,6 +260,7 @@ import {
   Download, 
   Search, 
   Eye, 
+  Edit3,
   Printer, 
   Trash2, 
   CheckCircle2, 

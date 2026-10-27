@@ -18,6 +18,9 @@
 
     <!-- Receipt Print & View Modal -->
     <ReceiptModal />
+
+    <!-- Receipt Edit & Items Modal -->
+    <EditReceiptModal />
   </div>
 </template>
 
@@ -28,6 +31,7 @@ import { store } from './store/inventoryStore.js'
 import Sidebar from './components/Sidebar.vue'
 import Navbar from './components/Navbar.vue'
 import ReceiptModal from './components/ReceiptModal.vue'
+import EditReceiptModal from './components/EditReceiptModal.vue'
 
 const route = useRoute()
 const isLoginPage = computed(() => route.name === 'login')

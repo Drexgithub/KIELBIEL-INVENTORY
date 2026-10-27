@@ -4,7 +4,8 @@ import { supabase } from '../supabase.js'
 export const store = reactive({
   currentUser: (() => {
     try {
-      const saved = localStorage.getItem('pos_user_session')
+      localStorage.removeItem('pos_user_session')
+      const saved = sessionStorage.getItem('pos_user_session')
       if (saved) {
         const u = JSON.parse(saved)
         if (u && u.name) return u
@@ -22,6 +23,7 @@ export const store = reactive({
   uventraDemoMode: false,
   activeNavTab: 'Dashboard Overview',
   activeReceiptModal: null,
+  activeEditReceiptModal: null,
 
   get isAdmin() {
     return this.currentUser.isAuthenticated
@@ -34,7 +36,7 @@ export const store = reactive({
       role: 'Admin User',
       isAuthenticated: true
     }
-    localStorage.setItem('pos_user_session', JSON.stringify(this.currentUser))
+    sessionStorage.setItem('pos_user_session', JSON.stringify(this.currentUser))
   },
 
   // Reactive State Arrays (Live populated from Supabase)
@@ -313,6 +315,7 @@ export const store = reactive({
       role: '',
       isAuthenticated: false
     }
+    sessionStorage.removeItem('pos_user_session')
     localStorage.removeItem('pos_user_session')
   },
   toggleSidebar() {
@@ -345,6 +348,53 @@ export const store = reactive({
   },
   closeReceipt() {
     this.activeReceiptModal = null
+  },
+  async openEditReceipt(receipt) {
+    if (!receipt) return
+    // Ensure line items are loaded
+    if ((!receipt.items || receipt.items.length === 0) && supabase) {
+      try {
+        const { data: items, error } = await supabase
+          .from('receipt_items')
+          .select('*')
+          .eq('receipt_no', receipt.receipt_no)
+        if (!error && items && items.length > 0) {
+          receipt.items = items.map(i => ({
+            item_desc: i.item_desc,
+            quantity: Number(i.quantity),
+            unit_price: Number(i.unit_price),
+            line_total: Number(i.line_total)
+          }))
+        }
+      } catch (err) {
+        console.error('Error fetching line items for edit receipt:', err)
+      }
+    }
+    this.activeEditReceiptModal = JSON.parse(JSON.stringify(receipt))
+  },
+  closeEditReceipt() {
+    this.activeEditReceiptModal = null
+  },
+  findProductByItemDesc(desc) {
+    if (!desc) return null
+    const clean = String(desc).trim().toLowerCase()
+    // 1. Exact match by name
+    let prod = this.products.find(p => p.name && p.name.trim().toLowerCase() === clean)
+    if (prod) return prod
+
+    // 2. Exact match by SKU
+    prod = this.products.find(p => p.sku && p.sku.trim().toLowerCase() === clean)
+    if (prod) return prod
+
+    // 3. Match prefix / startsWith
+    prod = this.products.find(p => p.name && p.name.trim().toLowerCase().startsWith(clean))
+    if (prod) return prod
+
+    // 4. Substring inclusion
+    prod = this.products.find(p => p.name && clean.includes(p.name.trim().toLowerCase()))
+    if (prod) return prod
+
+    return null
   },
 
   // ====================================================================
@@ -865,13 +915,204 @@ export const store = reactive({
     }
   },
 
-  async deleteReceipt(receiptNo) {
+  async updateReceipt(receiptNo, receiptData, newItems) {
     if (!receiptNo) return
+
+    // 1. Find existing receipt to get original items
+    const existing = this.receipts.find(r => r.receipt_no === receiptNo)
+    let oldItems = existing?.items ? JSON.parse(JSON.stringify(existing.items)) : []
+
+    if (oldItems.length === 0 && supabase) {
+      try {
+        const { data: dbItems } = await supabase.from('receipt_items').select('*').eq('receipt_no', receiptNo)
+        if (dbItems && dbItems.length > 0) {
+          oldItems = dbItems
+        }
+      } catch (err) {
+        console.error('Error fetching old items for receipt update:', err)
+      }
+    }
+
+    // 2. Calculate stock differences (oldQty - newQty)
+    // delta = oldQty - newQty:
+    // If oldQty > newQty (e.g., 10cs -> 8cs), delta is +2 -> 2cs returned to stock!
+    // If oldQty < newQty (e.g., 8cs -> 10cs), delta is -2 -> 2cs deducted from stock!
+    const oldQtyMap = {}
+    for (const it of oldItems) {
+      const desc = (it.item_desc || it.name || '').trim().toLowerCase()
+      if (!desc) continue
+      oldQtyMap[desc] = (oldQtyMap[desc] || 0) + (Number(it.quantity) || 0)
+    }
+
+    const newQtyMap = {}
+    for (const it of newItems) {
+      const desc = (it.item_desc || it.name || '').trim().toLowerCase()
+      if (!desc) continue
+      newQtyMap[desc] = (newQtyMap[desc] || 0) + (Number(it.quantity) || 0)
+    }
+
+    const allKeys = new Set([...Object.keys(oldQtyMap), ...Object.keys(newQtyMap)])
+
+    for (const k of allKeys) {
+      const oldQty = oldQtyMap[k] || 0
+      const newQty = newQtyMap[k] || 0
+      const delta = oldQty - newQty
+      if (delta !== 0) {
+        const prod = this.findProductByItemDesc(k)
+        if (prod) {
+          const newStock = Math.max(0, (Number(prod.quantity) || 0) + delta)
+          const minStock = Number(prod.min_stock) || 10
+          const newStatus = newStock === 0 ? 'Out of Stock' : (newStock <= minStock ? 'Low Stock' : 'In Stock')
+
+          prod.quantity = newStock
+          prod.status = newStatus
+
+          if (supabase && prod.id) {
+            try {
+              await supabase.from('products').update({ quantity: newStock, status: newStatus }).eq('id', prod.id)
+            } catch (err) {
+              console.error(`Error updating product stock for ${prod.name}:`, err)
+            }
+          }
+        }
+      }
+    }
+
+    // 3. Compute financial totals
+    const subtotal = newItems.reduce((acc, it) => acc + (Number(it.line_total || ((Number(it.unit_price) || 0) * (Number(it.quantity) || 1))) || 0), 0)
+    const discount = Number(receiptData.discount) || 0
+    const tax = Number(receiptData.tax) || 0
+    const grandTotal = Math.max(0, subtotal - discount + tax)
+
+    // 4. Update Supabase
     if (supabase) {
       try {
-        // 1. Delete associated line items first to ensure no foreign key deadlock or cascade issues
+        const updatePayload = {
+          customer_name: (receiptData.customer_name || 'Walk-in Customer').trim(),
+          cashier_name: (receiptData.cashier_name || 'Admin User').trim(),
+          payment_method: (receiptData.payment_method || 'Cash').trim(),
+          status: receiptData.status || 'Unpaid',
+          subtotal: subtotal,
+          discount: discount,
+          tax: tax,
+          grand_total: grandTotal
+        }
+        if (receiptData.raw_created_at) {
+          updatePayload.created_at = receiptData.raw_created_at
+        }
+
+        const { error: recErr } = await supabase.from('receipts').update(updatePayload).eq('receipt_no', receiptNo)
+        if (recErr) {
+          console.error('Supabase updateReceipt error:', recErr)
+          throw recErr
+        }
+
+        // Delete previous line items and re-insert updated line items
         await supabase.from('receipt_items').delete().eq('receipt_no', receiptNo)
-        // 2. Delete the receipt record
+
+        if (newItems.length > 0) {
+          const itemRows = newItems.map(item => ({
+            receipt_no: receiptNo,
+            item_desc: String(item.item_desc || item.name || 'Item').slice(0, 150),
+            quantity: Math.max(1, parseInt(item.quantity, 10) || 1),
+            unit_price: Number(item.unit_price || item.price) || 0,
+            line_total: Number(item.line_total || ((Number(item.unit_price || item.price) || 0) * (Number(item.quantity) || 1))) || 0
+          }))
+          const { error: itErr } = await supabase.from('receipt_items').insert(itemRows)
+          if (itErr) {
+            console.error('Supabase update receipt items error:', itErr)
+            throw itErr
+          }
+        }
+      } catch (err) {
+        console.error('Supabase update receipt error:', err)
+        throw err
+      }
+    }
+
+    // 5. Update local store state
+    if (existing) {
+      existing.customer_name = receiptData.customer_name || 'Walk-in Customer'
+      existing.cashier_name = receiptData.cashier_name || 'Admin User'
+      existing.payment_method = receiptData.payment_method || 'Cash'
+      existing.status = receiptData.status || 'Unpaid'
+      existing.subtotal = subtotal
+      existing.discount = discount
+      existing.tax = tax
+      existing.grand_total = grandTotal
+      if (receiptData.created_at) existing.created_at = receiptData.created_at
+      if (receiptData.raw_created_at) existing.raw_created_at = receiptData.raw_created_at
+      existing.items = newItems.map(i => ({
+        item_desc: i.item_desc || i.name,
+        quantity: Number(i.quantity),
+        unit_price: Number(i.unit_price || i.price),
+        line_total: Number(i.line_total || ((Number(i.unit_price || i.price) || 0) * (Number(i.quantity) || 1)))
+      }))
+    }
+
+    if (this.activeReceiptModal && this.activeReceiptModal.receipt_no === receiptNo) {
+      this.activeReceiptModal = { ...existing }
+    }
+
+    this.notifications.unshift({
+      id: Date.now(),
+      title: 'Receipt Updated',
+      desc: `Receipt ${receiptNo} updated. Product items and inventory stock synchronized.`,
+      time: 'Just now',
+      unread: true
+    })
+
+    this.closeEditReceipt()
+  },
+
+  async deleteReceipt(receiptNo) {
+    if (!receiptNo) return
+    const rec = this.receipts.find(r => r.receipt_no === receiptNo)
+    let itemsToRestore = rec?.items ? [...rec.items] : []
+
+    // If local receipt items are empty, fetch from Supabase before deletion to guarantee stock restoration
+    if (itemsToRestore.length === 0 && supabase) {
+      try {
+        const { data: dbItems } = await supabase.from('receipt_items').select('*').eq('receipt_no', receiptNo)
+        if (dbItems && dbItems.length > 0) {
+          itemsToRestore = dbItems
+        }
+      } catch (err) {
+        console.error('Error fetching receipt items before deletion:', err)
+      }
+    }
+
+    // 1. Restore product quantities back to inventory stock!
+    if (itemsToRestore && itemsToRestore.length > 0) {
+      for (const item of itemsToRestore) {
+        const desc = (item.item_desc || item.name || '').trim().toLowerCase()
+        if (!desc) continue
+        const prod = this.findProductByItemDesc(desc)
+        if (prod) {
+          const restoredQty = (Number(prod.quantity) || 0) + (Number(item.quantity) || 0)
+          const minStock = Number(prod.min_stock) || 10
+          const newStatus = restoredQty === 0 ? 'Out of Stock' : (restoredQty <= minStock ? 'Low Stock' : 'In Stock')
+
+          prod.quantity = restoredQty
+          prod.status = newStatus
+
+          if (supabase && prod.id) {
+            try {
+              await supabase.from('products').update({ quantity: restoredQty, status: newStatus }).eq('id', prod.id)
+            } catch (err) {
+              console.error(`Error restoring stock for product ${prod.name}:`, err)
+            }
+          }
+        }
+      }
+    }
+
+    // 2. Delete from Supabase
+    if (supabase) {
+      try {
+        // Delete line items first
+        await supabase.from('receipt_items').delete().eq('receipt_no', receiptNo)
+        // Delete receipt record
         const { error } = await supabase.from('receipts').delete().eq('receipt_no', receiptNo)
         if (error) {
           console.error('Supabase deleteReceipt error:', error)
@@ -882,11 +1123,20 @@ export const store = reactive({
         throw err
       }
     }
+
+    // 3. Remove from local store
     this.receipts = this.receipts.filter(r => r.receipt_no !== receiptNo)
-    // If the currently open modal is for this receipt, close it
     if (this.activeReceiptModal && this.activeReceiptModal.receipt_no === receiptNo) {
       this.closeReceipt()
     }
+
+    this.notifications.unshift({
+      id: Date.now(),
+      title: 'Receipt Deleted & Stock Restored',
+      desc: `Receipt ${receiptNo} deleted. All products returned to inventory stock.`,
+      time: 'Just now',
+      unread: true
+    })
   },
 
   async addCategory(category) {

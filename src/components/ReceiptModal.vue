@@ -117,6 +117,9 @@
         <button class="btn btn-primary" @click="printReceipt">
           <Printer style="width: 16px; height: 16px;" /> Print Full A4 Receipt
         </button>
+        <button class="btn btn-outline" style="color: #3B82F6; border-color: rgba(59, 130, 246, 0.4);" @click="editReceiptFromModal">
+          <Edit3 style="width: 16px; height: 16px;" /> Edit Receipt
+        </button>
         <button class="btn btn-mint" @click="goToReceipts">
           <ArrowRight style="width: 16px; height: 16px;" /> View in Receipts Ledger
         </button>
@@ -133,10 +136,16 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { store } from '../store/inventoryStore.js'
-import { Printer, X, ArrowRight, Trash2 } from 'lucide-vue-next'
+import { Printer, X, ArrowRight, Trash2, Edit3 } from 'lucide-vue-next'
 
 const router = useRouter()
 const isDeletingModal = ref(false)
+
+function editReceiptFromModal() {
+  const currentRec = receipt.value
+  store.closeReceipt()
+  store.openEditReceipt(currentRec)
+}
 
 function goToReceipts() {
   store.closeReceipt()

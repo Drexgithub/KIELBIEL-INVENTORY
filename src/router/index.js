@@ -33,8 +33,6 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   if (!to.meta.public && !store.currentUser.isAuthenticated) {
     next('/login')
-  } else if (to.path === '/login' && store.currentUser.isAuthenticated) {
-    next('/dashboard')
   } else if (to.meta.roles && !to.meta.roles.includes(store.currentUser.role)) {
     // Access Control: Block unauthorized role access to accounting/supplier views
     store.notifications.unshift({
