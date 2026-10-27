@@ -460,7 +460,7 @@ function printReceipt() {
   padding: 0.62rem 0.6rem;
   font-size: 16.5px;
   color: var(--text-main);
-  line-height: 1.4;
+  line-height: 1;
   border: none !important;
   vertical-align: middle;
 }
@@ -468,26 +468,26 @@ function printReceipt() {
 .item-name {
   color: var(--text-main);
   font-weight: 700;
-  font-size: 16.5px;
+  font-size: 12.5px;
   display: block;
 }
 
 .item-qty {
   color: var(--text-main);
   font-weight: 700;
-  font-size: 16.5px;
+  font-size: 12.5px;
 }
 
 .item-price {
   color: var(--text-main);
   font-weight: 600;
-  font-size: 16.5px;
+  font-size: 12.5px;
 }
 
 .item-total {
   color: var(--text-main);
-  font-weight: 800;
-  font-size: 16.5px;
+  font-weight: 700;
+  font-size: 12.5px;
 }
 
 .page-bottom-anchor {
