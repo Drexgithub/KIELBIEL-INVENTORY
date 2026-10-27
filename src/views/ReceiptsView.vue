@@ -332,6 +332,9 @@ function toggleReceiptPaid(r) {
 function directPrint(r) {
   store.openReceipt(r)
   setTimeout(() => {
+    const card = document.querySelector('.receipt-card')
+    if (card) card.scrollTop = 0
+    window.scrollTo(0, 0)
     window.print()
   }, 300)
 }

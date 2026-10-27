@@ -41,8 +41,8 @@
           </div>
 
           <!-- Itemized Table (Frameless / No Lines between items) -->
-          <table class="receipt-items-table">
-            <thead>
+          <table v-if="(page.items && page.items.length) || page.isFirst" class="receipt-items-table">
+            <thead v-if="page.isFirst">
               <tr>
                 <th style="width: 46%; text-align: left;">ITEM DESCRIPTION</th>
                 <th style="width: 14%; text-align: center;">QTY</th>
@@ -50,7 +50,7 @@
                 <th style="width: 20%; text-align: right;">LINE TOTAL</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody v-if="page.items && page.items.length">
               <tr v-for="(item, idx) in page.items" :key="idx" class="receipt-item-row">
                 <td style="width: 46%; text-align: left;" class="col-desc">
                   <strong class="item-name">{{ item.item_desc }}</strong>
@@ -59,9 +59,11 @@
                 <td style="width: 20%; text-align: right;" class="col-price item-price">₱{{ Number(item.unit_price).toFixed(2) }}</td>
                 <td style="width: 20%; text-align: right;" class="col-total item-total">₱{{ Number(item.line_total).toFixed(2) }}</td>
               </tr>
+            </tbody>
 
-              <!-- Fallback if receipt has zero items recorded -->
-              <tr v-if="!page.items || !page.items.length">
+            <!-- Fallback if receipt has zero items recorded -->
+            <tbody v-else-if="page.isFirst">
+              <tr>
                 <td colspan="4" style="text-align: center; padding: 1.5rem; color: var(--text-muted);">No items recorded for this receipt.</td>
               </tr>
             </tbody>
@@ -194,14 +196,13 @@ const customerAddress = computed(() => {
   return found ? (found.address || 'Store Direct') : 'Store Direct'
 })
 
-// Dynamic Pagination Algorithm calibrated to occupy full A4 paper height
+// Dynamic Pagination Algorithm calibrated to fully occupy A4 paper without empty gaps
 function estimateItemHeight(item) {
   const desc = (item.item_desc || '').trim()
-  // With 16.5px font and 0.62rem vertical padding:
-  // Base 1-line item height is ~45px
-  // Multiline wraps at approximately 30 characters in 46% description column
-  const lines = Math.max(1, Math.ceil(desc.length / 30))
-  return 45 + (lines - 1) * 22
+  // With 12.5px font, 0.40rem vertical padding, line-height 1.1:
+  // Base 1-line item height is ~27px
+  const lines = Math.max(1, Math.ceil(desc.length / 45))
+  return 27 + (lines - 1) * 14
 }
 
 const paginatedPages = computed(() => {
@@ -218,16 +219,16 @@ const paginatedPages = computed(() => {
   }
 
   // Exact Printable Page Capacity Units (A4 portrait = 297mm = 1122.5px):
-  // Margins: 11mm top + 11mm bottom = 22mm = ~84px
-  // Usable printable height: ~1038px.
-  // Budget calibrated to ~970px leaves zero awkward white space and prevents accidental overflow.
-  const TOTAL_PAGE_CAPACITY = 970
-  const PAGE_1_HEADER_SPACE = 265 // Company Header + Meta Grid + Table <thead>
-  const TABLE_HEADER_SPACE = 42   // Table <thead> on Page 2+
-  const TOTALS_AND_SIG_SPACE = 175 // Subtotal, Grand Total, Signatures
+  // Margins: 10mm top + 10mm bottom = 20mm = ~76px
+  // Usable printable height: ~1046px.
+  // 1030px gives ~98.5% page coverage, filling white space on every page
+  const TOTAL_PAGE_CAPACITY = 1030
+  const PAGE_1_HEADER_SPACE = 260 // Company Header (~120px) + Meta Grid (~110px) + Table <thead> (~30px)
+  const TABLE_HEADER_SPACE = 0    // No Table <thead> on Page 2+
+  const TOTALS_AND_SIG_SPACE = 185 // Subtotal, Grand Total, Signatures (~185px)
 
-  // Case 1: All items fit comfortably on a single page
-  const singlePageItemCap = TOTAL_PAGE_CAPACITY - PAGE_1_HEADER_SPACE - TOTALS_AND_SIG_SPACE // ~530px (~12-13 items)
+  // Case 1: All items fit comfortably on a single page (~21 items max)
+  const singlePageItemCap = TOTAL_PAGE_CAPACITY - PAGE_1_HEADER_SPACE - TOTALS_AND_SIG_SPACE // ~585px
   let totalAllItemsHeight = 0
   for (const it of items) {
     totalAllItemsHeight += estimateItemHeight(it)
@@ -249,7 +250,7 @@ const paginatedPages = computed(() => {
   let currentIndex = 0
   let pageNum = 1
 
-  // Page 1 Capacity: ~705px (~15-16 items max, guarantees zero spillover to page 2)
+  // Page 1 Capacity: ~770px (fills entire page with up to ~28 items to eliminate white space!)
   const page1Capacity = TOTAL_PAGE_CAPACITY - PAGE_1_HEADER_SPACE
   let currentAccumulated = 0
   const page1Items = []
@@ -281,8 +282,8 @@ const paginatedPages = computed(() => {
       remainingHeight += estimateItemHeight(it)
     }
 
-    // Last Page Capacity (has table header, remaining items, totals, & signatures)
-    const lastPageCapacity = TOTAL_PAGE_CAPACITY - TABLE_HEADER_SPACE - TOTALS_AND_SIG_SPACE // ~753px (~16-17 items)
+    // Last Page Capacity (has remaining items + totals & signatures)
+    const lastPageCapacity = TOTAL_PAGE_CAPACITY - TABLE_HEADER_SPACE - TOTALS_AND_SIG_SPACE // ~845px (~31 items)
 
     // Check if remaining items fit on this page as the LAST page
     if (remainingHeight <= lastPageCapacity) {
@@ -295,8 +296,8 @@ const paginatedPages = computed(() => {
       })
       break
     } else {
-      // Middle Page (only table header at top, holds up to ~20-22 items, occupying full paper)
-      const middlePageCapacity = TOTAL_PAGE_CAPACITY - TABLE_HEADER_SPACE // ~928px
+      // Middle Page (full paper height, holds up to ~38 items to occupy full page)
+      const middlePageCapacity = TOTAL_PAGE_CAPACITY - TABLE_HEADER_SPACE // ~1030px
       let midAccumulated = 0
       const midItems = []
 
@@ -333,7 +334,12 @@ const paginatedPages = computed(() => {
 })
 
 function printReceipt() {
-  window.print()
+  const card = document.querySelector('.receipt-card')
+  if (card) card.scrollTop = 0
+  window.scrollTo(0, 0)
+  setTimeout(() => {
+    window.print()
+  }, 100)
 }
 </script>
 
@@ -457,8 +463,8 @@ function printReceipt() {
 }
 
 .receipt-items-table td {
-  padding: 0.62rem 0.6rem;
-  font-size: 16.5px;
+  padding: 0.40rem 0.4rem;
+  font-size: 12.5px;
   color: var(--text-main);
   line-height: 1;
   border: none !important;
@@ -599,6 +605,9 @@ function printReceipt() {
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
+    max-height: none !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #ffffff !important;
@@ -613,6 +622,8 @@ function printReceipt() {
   .receipt-card {
     max-width: 100% !important;
     width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
     box-shadow: none !important;
     border: none !important;
     outline: none !important;
@@ -625,15 +636,17 @@ function printReceipt() {
 
   .print-page {
     width: 100% !important;
-    min-height: 297mm !important;
-    height: 297mm !important;
+    min-height: auto !important;
+    height: auto !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: flex-start !important;
     page-break-after: always !important;
     break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
     box-sizing: border-box !important;
-    padding: 11mm 15mm 11mm 15mm !important;
+    padding: 10mm 15mm 10mm 15mm !important;
     margin: 0 !important;
     position: relative !important;
   }
@@ -644,13 +657,12 @@ function printReceipt() {
   }
 
   .page-content-wrapper {
-    flex: 1 0 auto !important;
     display: flex !important;
     flex-direction: column !important;
   }
 
   .page-bottom-anchor {
-    margin-top: auto !important;
+    margin-top: 1.25rem !important;
     padding-top: 0.5rem !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
@@ -733,7 +745,7 @@ function printReceipt() {
   }
 
   .receipt-items-table thead {
-    display: table-header-group !important;
+    display: table-row-group !important;
   }
 
   .receipt-items-table th {
@@ -751,38 +763,38 @@ function printReceipt() {
   }
 
   .receipt-items-table td {
-    padding: 0.62rem 0.6rem !important;
-    font-size: 16.5px !important;
+    padding: 0.40rem 0.4rem !important;
+    font-size: 12.5px !important;
     color: #000000 !important;
     border: none !important;
     border-top: none !important;
     border-bottom: none !important;
     border-left: none !important;
     border-right: none !important;
-    line-height: 1.4 !important;
+    line-height: 1.1 !important;
     vertical-align: middle !important;
   }
 
   .item-name {
     color: #000000 !important;
-    font-size: 16.5px !important;
+    font-size: 12.5px !important;
     font-weight: 700 !important;
     display: block !important;
   }
 
   .item-qty {
-    font-size: 16.5px !important;
+    font-size: 12.5px !important;
     font-weight: 700 !important;
   }
 
   .item-price {
-    font-size: 16.5px !important;
+    font-size: 12.5px !important;
     font-weight: 600 !important;
   }
 
   .item-total {
-    font-size: 16.5px !important;
-    font-weight: 800 !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
   }
 
   .receipt-items-table tr {
